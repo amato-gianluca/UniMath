@@ -57,6 +57,8 @@ Section Nat.
   Goal terminal_hom nat_algebra 2 = tt.
   Proof. exact (idpath _). Qed.
 
+  (** Status **)
+
   Goal status_cons nat_succ (statusok 1) = statusok 1.
   Proof. exact (idpath _). Qed.
 
@@ -69,6 +71,8 @@ Section Nat.
   Goal status_concatenate (statusok 1) statuserror = statuserror.
   Proof. exact (idpath _). Qed.
 
+ (** Stack **)
+
   Local Lemma one_status: list2status (nat_succ :: nat_zero :: nil) = statusok 1.
   Proof. exact (idpath _). Qed.
 
@@ -76,16 +80,16 @@ Section Nat.
   Proof. exact (idpath _). Qed.
 
   Local Definition term_zero: Stack nat_signature 1 :=
-    mk_stack 1 (nat_zero :: nil) (idpath (statusok 1)).
+    mk_stack (nat_zero :: nil) (idpath (statusok 1)).
 
   Local Definition term_one: Stack nat_signature 1 :=
-    mk_stack 1 (nat_succ :: nat_zero :: nil) one_status.
+    mk_stack (nat_succ :: nat_zero :: nil) one_status.
 
   Goal list2status term_one = statusok 1.
   Proof. exact (idpath _). Qed.
 
   Local Definition term_two: Stack nat_signature 1 :=
-    mk_stack 1 (nat_succ :: nat_succ :: nat_zero :: nil) one_status.
+    mk_stack (nat_succ :: nat_succ :: nat_zero :: nil) one_status.
 
   Goal list2status term_two = statusok 1.
   Proof. exact (idpath _). Qed.
@@ -94,18 +98,49 @@ Section Nat.
   Proof. exact (idpath _). Qed.
 
   Local Definition zero_one_stack: Stack nat_signature 2:=
-    mk_stack 2 (nat_zero :: nat_succ :: nat_zero :: nil) zero_one_status.
+    mk_stack (nat_zero :: nat_succ :: nat_zero :: nil) zero_one_status.
 
   Goal list2status (nat_succ :: nil) = statuserror.
   Proof. exact (idpath _). Qed.
 
-  Goal stack2list (stack_cons nat_succ term_one (natleh0n 0)) = nat_succ :: nat_succ :: nat_zero :: nil.
+  (** Goal Ops **)
+
+  Goal stack2list (stack_cons nat_succ term_one (natleh0n 0)) = term_two.
   Proof. exact (idpath _). Qed.
 
-  Goal stack2list (stack_concatenate term_one zero_one_stack) = nat_succ :: nat_zero :: nat_zero :: nat_succ :: nat_zero :: nil.
+  Goal stack_cons nat_succ term_one (natleh0n 0) = term_two.
+  Proof. apply stack_extens. exact (idpath _). Qed.
+
+  Goal stack_hd term_two = nat_succ.
   Proof. exact (idpath _). Qed.
 
-  Goal stack2list (stack_vector_concatenate (term_one ::: term_two ::: vnil)) = nat_succ :: nat_zero :: nat_succ :: nat_succ :: nat_zero :: nil.
+  Goal stack_tl term_two = term_one.
+  Proof. apply stack_extens. exact (idpath _). Qed.
+
+  Goal stack2list (stack_concatenate term_one zero_one_stack)
+  = nat_succ :: nat_zero :: nat_zero :: nat_succ :: nat_zero :: nil.
+  Proof. exact (idpath _). Qed.
+
+  (* DOES NOT TERMINATE: Eval cbn in stack_cases stack_nil. *)
+
+  Goal stack_cases (@stack_nil nat_signature) = ii1 ( idpath 0 ,, idpath stack_nil).
+  Proof.
+    apply idpath.
+  Qed.
+
+  (* DOES NOT TERMINATE: Eval cbn in stack2list (stack_concatenate2 stack_nil zero_one_stack). *)
+
+  Goal stack2list (stack_concatenate2 stack_nil zero_one_stack) = zero_one_stack.
+  Proof. exact (idpath _). Qed.
+
+  (*
+  Goal stack2list (stack_concatenate2 term_one zero_one_stack)
+  = nat_succ :: nat_zero :: nat_zero :: nat_succ :: nat_zero :: nil.
+  Proof. exact (idpath _). Qed.
+  *)
+
+  Goal stack2list (terms2stack (term_one ::: term_two ::: vnil))
+  = nat_succ :: nat_zero :: nat_succ :: nat_succ :: nat_zero :: nil.
   Proof. exact (idpath _). Qed.
 
   Goal term2list (term_op nat_succ ((term_op nat_zero vnil) ::: vnil)) = nat_succ :: nat_zero :: nil.
@@ -114,7 +149,7 @@ Section Nat.
   Goal princ_op term_two = nat_succ.
   Proof. exact (idpath _). Qed.
 
-  Goal pr1 (extract_substack zero_one_stack 0 (natleh0n 0)) = stack_empty nat_signature.
+  Goal pr1 (extract_substack zero_one_stack 0 (natleh0n 0)) = stack_nil.
   Proof. exact (idpath _ ). Qed.
 
   Goal pr1 (pr2 (extract_substack zero_one_stack 0 (natleh0n 0))) = zero_one_stack.
@@ -138,10 +173,10 @@ Section Nat.
   Goal stack2list (pr1 (extract_substack zero_one_stack 2 (natleh0n 0))) = stack2list zero_one_stack.
   Proof. exact (idpath _). Qed.
 
-  Goal pr1 (pr2 (extract_substack zero_one_stack 2 (natleh0n 0))) = stack_empty nat_signature.
+  Goal pr1 (pr2 (extract_substack zero_one_stack 2 (natleh0n 0))) = stack_nil.
   Proof. apply stack_extens. exact (idpath _). Qed.
 
-  Goal stack2list (pr1 (pr2 (extract_substack zero_one_stack 2 (natleh0n 0)))) = stack2list (stack_empty nat_signature).
+  Goal stack2list (pr1 (pr2 (extract_substack zero_one_stack 2 (natleh0n 0)))) = stack2list stack_nil.
   Proof. exact (idpath _). Qed.
 
   Goal subterm term_one (●0) = term_zero.
@@ -164,7 +199,7 @@ Section Bool.
   Goal bool_not :: bool_and :: bool_true :: bool_false :: [] = t2.
   Proof. exact (idpath _). Qed.
 
-  Goal pr1 (extract_substack t1 0 (natleh0n 0)) = stack_empty bool_signature.
+  Goal pr1 (extract_substack t1 0 (natleh0n 0)) = stack_nil.
   Proof. exact (idpath _). Qed.
 
   Goal pr1 ( pr2 (extract_substack t1 0 (natleh0n 0))) = t1.
@@ -176,10 +211,10 @@ Section Bool.
   Goal stack2list (pr1 (extract_substack t1 1 (natleh0n 0))) = stack2list t1.
   Proof. exact (idpath _). Qed.
 
-  Goal pr1 (pr2 (extract_substack t1 1 (natleh0n 0))) = stack_empty bool_signature.
+  Goal pr1 (pr2 (extract_substack t1 1 (natleh0n 0))) = stack_nil.
   Proof. apply stack_extens. exact (idpath _). Qed.
 
-  Goal stack2list (pr1 (pr2 (extract_substack t1 1 (natleh0n 0)))) = stack2list (stack_empty bool_signature).
+  Goal stack2list (pr1 (pr2 (extract_substack t1 1 (natleh0n 0)))) = stack2list stack_nil.
   Proof. exact (idpath _). Qed.
 
   Goal subterm t2 (●0) = t1.
