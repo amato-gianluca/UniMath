@@ -6,6 +6,7 @@
 /.coq_makefile_input
 /.coq_makefile_output
 /.coq_makefile_output.conf
+..coq_makefile_output.d
 /.coqdeps.d
 /build/CoqMakefile.make
 /latex/*.log
@@ -23,3 +24,5 @@
 .vscode
 _CoqProject
 *.zip
+*.vok
+*.vos
