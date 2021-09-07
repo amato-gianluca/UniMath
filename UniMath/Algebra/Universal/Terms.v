@@ -24,6 +24,19 @@ Local Open Scope hvec.
 Local Open Scope list.
 Local Open Scope transport.
 
+(* Move this in combinatorics maybe. *)
+Definition isjust {A : UU} : maybe A → bool := coprodtobool.
+
+Lemma isjust_just {A : UU} (a : A) : isjust (just a) = true.
+Proof.
+  apply idpath.
+Qed.
+
+Lemma isjust_nothing {A : UU} : isjust (nothing : maybe A) = false.
+Proof.
+  apply idpath.
+Qed.
+
 (** ** Definition of [oplist] (operations list). *)
 (**
 An [oplist] is a list of operation symbols, interpreted as commands to be executed by a stack
@@ -82,51 +95,23 @@ Section Oplists.
     apply isasetstack.
   Defined.
 
-  Lemma isjust {A : UU} (x : maybe A) : bool.
-  Proof.
-    induction x as [ok | error].
-    - exact true.
-    - exact false.
-  Defined.
-
-  (*
-  Lemma isjust_just {A : UU} (a : A)
-    : isjust (just a) = true.
-  Proof.
-    apply idpath.
-  Qed.
-
-  Lemma isjust_nothing {A : UU}
-    : isjust (A := A) nothing = false.
-  Proof.
-    apply idpath.
-  Qed.
-  *)
-
   Local Definition can_opexec (nm : names σ) (ss : list (sorts σ)) : bool
     := isjust (prefix_remove (arity nm) ss).
 
   Local Definition opexec_ok (nm:names σ) (ss: list (sorts σ)) : bool
     := isjust (prefix_remove (arity nm) ss).
 
-  (*
-  Local Definition opexec_ok_works (nm:names σ) (ss: list (sorts σ)) : bool
-    := (opexec_ok (arity nm) ss = true) = isprefix (arity nm) ss.
-  *)
-
   Local Lemma opexec_not_ok (nm:names σ) (ss: list (sorts σ))
-    : opexec_ok nm ss = false →
-      opexec nm (just ss) = nothing ×
-      prefix_remove (arity nm) ss = nothing.
+    : opexec_ok nm ss = false
+      → opexec nm (just ss) = nothing ×
+        prefix_remove (arity nm) ss = nothing.
   Proof.
     unfold opexec, opexec_ok, funcomp. cbn.
     induction (prefix_remove (arity nm) ss) as [ok | error]; cbn.
     - exact (fromempty ∘ nopathstruetofalse).
     - intros _. split.
       + apply idpath.
-      + unfold nothing.
-        apply maponpaths.
-        apply isapropunit.
+      + unfold nothing. apply maponpaths. apply isapropunit.
   Qed.
 
   Local Lemma opexec_is_ok (nm:names σ) (ss: list (sorts σ))
@@ -137,10 +122,7 @@ Section Oplists.
   Proof.
     unfold opexec, opexec_ok, funcomp. cbn.
     induction (prefix_remove (arity nm) ss) as [ok | error]; cbn.
-    - intros _.
-       exists ok. split.
-       + apply idpath.
-       + apply idpath.
+    - intros _. exists ok. split; apply idpath.
     - exact (fromempty ∘ nopathsfalsetotrue).
   Qed.
 
@@ -157,7 +139,7 @@ Section Oplists.
     - apply opexec_not_ok. exact hp.
   Defined.
 
-  Local Lemma opexec_dec (nm: names σ) (ss: list (sorts σ))
+  Local Lemma opexec_dec' (nm: names σ) (ss: list (sorts σ))
     : (opexec nm (just ss) = nothing ×
        prefix_remove (arity nm) ss = nothing)
       ⨿
@@ -167,6 +149,26 @@ Section Oplists.
   Proof.
     apply coprodcomm.
     apply opexec_dec_alt.
+  Defined.
+
+  Local Lemma opexec_dec (nm: names σ) (ss: list (sorts σ))
+    : (opexec nm (just ss) = nothing × prefix_remove (arity nm) ss = nothing)
+      ⨿
+      ∑ ss': list (sorts σ),
+      (opexec nm (just ss) = just ((sort nm) :: ss') ×
+       prefix_remove (arity nm) ss = just ss').
+  Proof.
+    unfold opexec, just.
+    simpl.
+    induction (prefix_remove (arity nm) ss) as [ ss' | error ].
+    - apply ii2.
+      exists ss'.
+      split; apply idpath.
+    - apply ii1.
+      split.
+      + apply idpath.
+      + induction error.
+        apply idpath.
   Defined.
 
   Local Lemma opexec_just_f
