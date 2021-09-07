@@ -10,6 +10,8 @@ with a single element and no stack underflow or type errors occur.
 Here we only define ground terms, while terms with variables will be defined in <<VTerms.v>>.
 *)
 
+Require Import UniMath.Foundations.All.
+Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.MoreFoundations.Notations.
 Require Import UniMath.MoreFoundations.PartA.
 
@@ -80,25 +82,98 @@ Section Oplists.
     apply isasetstack.
   Defined.
 
-  Local Lemma opexec_dec (nm: names σ) (ss: list (sorts σ))
-    : ((opexec nm (just ss) = nothing) × (prefix_remove (arity nm) ss = nothing))
-              ⨿  ∑ (ss': list (sorts σ)), (opexec nm (just ss) = just ((sort nm) :: ss')) × (prefix_remove (arity nm) ss = just ss').
+  Lemma isjust {A : UU} (x : maybe A) : bool.
   Proof.
-    unfold opexec, just.
-    simpl.
-    induction (prefix_remove (arity nm) ss) as [ ss' | error ].
-    - apply ii2.
-      exists ss'.
-      split; apply idpath.
-    - apply ii1.
-      split.
-      + apply idpath.
-      + induction error.
-        apply idpath.
+    induction x as [ok | error].
+    - exact true.
+    - exact false.
   Defined.
 
-  Local Lemma opexec_just_f (nm: names σ) (ss: list (sorts σ)) (arityok: isprefix (arity nm) ss)
-    : ∑ ss': list (sorts σ), opexec nm (just ss) = just ((sort nm) :: ss') ×  prefix_remove (arity nm) ss = just ss'.
+  (*
+  Lemma isjust_just {A : UU} (a : A)
+    : isjust (just a) = true.
+  Proof.
+    apply idpath.
+  Qed.
+
+  Lemma isjust_nothing {A : UU}
+    : isjust (A := A) nothing = false.
+  Proof.
+    apply idpath.
+  Qed.
+  *)
+
+  Local Definition can_opexec (nm : names σ) (ss : list (sorts σ)) : bool
+    := isjust (prefix_remove (arity nm) ss).
+
+  Local Definition opexec_ok (nm:names σ) (ss: list (sorts σ)) : bool
+    := isjust (prefix_remove (arity nm) ss).
+
+  (*
+  Local Definition opexec_ok_works (nm:names σ) (ss: list (sorts σ)) : bool
+    := (opexec_ok (arity nm) ss = true) = isprefix (arity nm) ss.
+  *)
+
+  Local Lemma opexec_not_ok (nm:names σ) (ss: list (sorts σ))
+    : opexec_ok nm ss = false →
+      opexec nm (just ss) = nothing ×
+      prefix_remove (arity nm) ss = nothing.
+  Proof.
+    unfold opexec, opexec_ok, funcomp. cbn.
+    induction (prefix_remove (arity nm) ss) as [ok | error]; cbn.
+    - exact (fromempty ∘ nopathstruetofalse).
+    - intros _. split.
+      + apply idpath.
+      + unfold nothing.
+        apply maponpaths.
+        apply isapropunit.
+  Qed.
+
+  Local Lemma opexec_is_ok (nm:names σ) (ss: list (sorts σ))
+    : opexec_ok nm ss = true →
+      ∑ ss' : list (sorts σ),
+        opexec nm (just ss) = just ((sort nm) :: ss') ×
+        prefix_remove (arity nm) ss = just ss'.
+  Proof.
+    unfold opexec, opexec_ok, funcomp. cbn.
+    induction (prefix_remove (arity nm) ss) as [ok | error]; cbn.
+    - intros _.
+       exists ok. split.
+       + apply idpath.
+       + apply idpath.
+    - exact (fromempty ∘ nopathsfalsetotrue).
+  Qed.
+
+  Local Lemma opexec_dec_alt (nm: names σ) (ss: list (sorts σ))
+    : (∑ ss': list (sorts σ),
+         opexec nm (just ss) = just ((sort nm) :: ss') ×
+         prefix_remove (arity nm) ss = just ss')
+      ⨿
+      (opexec nm (just ss) = nothing ×
+       prefix_remove (arity nm) ss = nothing).
+  Proof.
+    refine (coprodf _ _ (boolchoice (opexec_ok nm ss))); intro hp.
+    - apply opexec_is_ok. exact hp.
+    - apply opexec_not_ok. exact hp.
+  Defined.
+
+  Local Lemma opexec_dec (nm: names σ) (ss: list (sorts σ))
+    : (opexec nm (just ss) = nothing ×
+       prefix_remove (arity nm) ss = nothing)
+      ⨿
+      (∑ ss' : list (sorts σ),
+         opexec nm (just ss) = just ((sort nm) :: ss') ×
+         prefix_remove (arity nm) ss = just ss').
+  Proof.
+    apply coprodcomm.
+    apply opexec_dec_alt.
+  Defined.
+
+  Local Lemma opexec_just_f
+        (nm: names σ) (ss: list (sorts σ)) (arityok: isprefix (arity nm) ss)
+    : ∑ ss': list (sorts σ),
+        opexec nm (just ss) = just ((sort nm) :: ss') ×
+        prefix_remove (arity nm) ss = just ss'.
   Proof.
     induction (opexec_dec nm ss) as [err | ok].
     - induction err as [_  err].
