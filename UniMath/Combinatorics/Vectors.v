@@ -3,6 +3,8 @@
 
 Require Import UniMath.Combinatorics.StandardFiniteSets.
 Require Import UniMath.Foundations.NaturalNumbers.
+Require Import UniMath.MoreFoundations.Bool.
+Require Import UniMath.Combinatorics.Reflect.
 
 Local Open Scope nat.
 Local Open Scope stn.
@@ -340,4 +342,170 @@ Proof.
   - induction v1 as [x1 xs1].
     induction v2 as [x2 xs2].
     exact ((x1 ,, x2) ::: IHn xs1 xs2).
+Defined.
+
+Definition vec_all {A : UU} (P : A → UU) {n} : vec A n → UU
+  := vec_ind _ unit (λ a m _ X, P a × X) n.
+
+Lemma vec_all_vnil {A : UU} (P : A → UU)
+  : vec_all P [()] = unit.
+Proof.
+  apply idpath.
+Defined.
+
+Lemma vec_all_vcons {A : UU} (P : A → UU) (a : A) {n} (v : vec A n)
+  : vec_all P (vcons a v) = (P a × vec_all P v).
+Proof.
+  apply idpath.
+Defined.
+
+Definition vec_all2 {A B : UU} (P : A → B → UU) {n}
+  : vec A n → vec B n → UU
+  := nat_rect
+       (λ n : nat, vec A n → vec B n → UU)
+       (λ _ _, unit)
+       (λ n recur x y, P (pr1 x) (pr1 y) × recur (pr2 x) (pr2 y)) n.
+
+Lemma vec_all2_vnil {A B : UU} (P : A → B → UU)
+  : vec_all2 P [()] [()] = unit.
+Proof.
+  apply idpath.
+Defined.
+
+Lemma vec_all2_vcons {A B : UU}
+      (P : A → B → UU)
+      (a : A) (b : B)
+      {n}
+      (v : vec A n)
+      (w : vec B n)
+  : vec_all2 P (vcons a v) (vcons b w) = (P a b × vec_all2 P v w).
+Proof.
+  apply idpath.
+Defined.
+
+Definition vec_all2_gen {A B : UU} (P : A → B → UU)
+    {m} (v : vec A m)
+    {n} (w : vec B n)
+  : UU.
+Proof.
+  revert m v n w.
+  induction m as [|m recur].
+  - intros _.
+    induction n as [|n _].
+    + exact (λ _, unit).
+    + exact (λ _, ∅).
+  - induction 1 as (a, v).
+    induction n as [|n _].
+    + exact (λ _, ∅).
+    + induction 1 as (b, w).
+      exact (P a b × recur v _ w).
+Defined.
+
+Lemma vec_all2_gen_vnil_vnil {A B : UU} (P : A → B → UU)
+  : vec_all2 P [()] [()] = unit.
+Proof.
+  apply idpath.
+Defined.
+
+Lemma vec_all2_gen_vnil_vcons {A B : UU} (P : A → B → UU)
+      (b : B) {n} (w : vec B n)
+  : vec_all2_gen P [()] (vcons b w) = ∅.
+Proof.
+  apply idpath.
+Defined.
+
+Lemma vec_all2_gen_vcons_vnil {A B : UU} (P : A → B → UU)
+      (a : A) {m} (v : vec A m)
+  : vec_all2_gen P (vcons a v) [()] = ∅.
+Proof.
+  apply idpath.
+Defined.
+  
+Lemma vec_all2_gen_vcons_vcons {A B : UU} (P : A → B → UU)
+      (a : A) {m} (v : vec A m)
+      (b : B) {n} (w : vec B n)
+  : vec_all2_gen P (vcons a v) (vcons b w) = (P a b × vec_all2_gen P v w).
+Proof.
+  apply idpath.
+Defined.
+
+Definition veceqB {X : UU} (eqB : X → X → bool) {m} (u : vec X m) {n} (v : vec X n) : bool.
+Proof.
+revert u n v. induction m as [|m rec].
+- induction n; intros; [exact true | exact false].
+- induction n as [|n _]; [intros; exact false | idtac ].
+  induction u as (x,xs).
+  induction 1 as (y,ys).
+  refine (andb (eqB x y) _).
+  exact (rec xs _ ys).
+Defined.
+
+Lemma reflect_veceqB {X : UU} (eqB : X → X → bool)
+             (H : ∏ x y : X, reflect (x = y) (eqB x y))
+             {n} (u v : vec X n)
+  : reflect (u = v) (veceqB eqB u v).
+Proof.
+induction n as [|n Hn].
+- induction u as (); induction v as ().
+  apply true_to_reflect. apply idpath.
+- induction u as (x, xs); induction v as (y, ys).
+  simpl.
+  assert (HH : reflect (x = y) (eqB x y)).
+  { apply H. }
+  induction (eqB x y); cbn.
+  + apply reflect_to_true in HH. induction HH. apply reflect_feq.
+    * intros a b eq.
+      change (pr2 (x,,a) = pr2 (x,,b)).
+      apply maponpaths. exact eq.
+    * apply Hn.
+  + apply false_to_reflect. apply reflect_to_false in HH.
+    intros eq. apply HH. apply (maponpaths pr1 eq).
+Qed.
+
+Definition veceq {A : UU} {m} (u : vec A m) {n} (v : vec A n) : UU
+  := ∑ p : m = n, transportf (vec A) p u = v.
+
+Definition veceq_to_dimeq {A : UU} {m} (u : vec A m) {n} (v : vec A n)
+  : veceq u v → m = n
+  := pr1.
+
+Definition veceq_eq {A : UU}
+     {m} (u : vec A m)
+     {n} (v : vec A n)
+     (e : veceq u v)
+  : transportf (vec A) (veceq_to_dimeq u v e) u = v
+  := pr2 e.
+
+Lemma veceq_simple {A : UU} {n} (u v : vec A n)
+  : u = v → veceq u v.
+Proof.
+intros p. unfold veceq.
+exists (idpath n). apply p.
+Defined.
+
+Lemma not_veceq_vcons_vnil {A : UU} (x : A) {n} (v : vec A n)
+  : ¬ veceq vnil (vcons x v).
+Proof.
+intros hp. apply veceq_to_dimeq in hp. apply negpaths0sx in hp. exact hp.
+Defined.
+
+Lemma not_veceq_vnil_vcons {A : UU} (x : A) {n} (v : vec A n)
+  : ¬ veceq (vcons x v) vnil.
+Proof.
+intros hp. apply veceq_to_dimeq in hp. apply negpathssx0 in hp. exact hp.
+Defined.
+
+Definition is_vec_prefixB {A : UU} (eqB : A → A → bool)
+    {m} (u : vec A m)
+    {n} (v : vec A n)
+  : bool.
+Proof.
+revert u n v. induction m as [|m rec].
+- intros. exact true.
+- induction 1 as (x, xs).
+  induction n as [|n _].
+  + intros. exact false.
+  + induction 1 as (y, ys).
+    * apply (andb (eqB x y)).
+      apply (rec xs _ ys).
 Defined.

@@ -8,22 +8,24 @@ Require Import UniMath.Foundations.PartA.
 Require Import UniMath.Foundations.PartB.
 Require Import UniMath.Foundations.PartD.
 Require Import UniMath.Foundations.NaturalNumbers.
+Require Import UniMath.MoreFoundations.PartA.
 Require Import UniMath.MoreFoundations.Bool.
 
 (* Preliminary material that has to be moved elsewhere. *)
-
-Definition iffb : bool → bool →  bool.
-Proof.
-intros b1. induction b1.
-- exact (λ b2, b2).
-- exact negb.
-Defined.
 
 Lemma isaproplogeq {X Y : UU}
   : isaprop X → isaprop Y → isaprop (X <-> Y).
 Proof.
 intros. unfold logeq.
 apply isapropdirprod; apply isapropimpl; assumption.
+Defined.
+
+Lemma fiber_paths_simple {A : UU} (Aset : isaset A) (B : A → UU)
+        (a : A) (b b' : B a) (p : a,,b = a,,b')
+  : b = b'.
+Proof.
+refine (_ @ fiber_paths (B := B) p). cbn.
+apply pathsinv0. apply transportf_set. exact Aset.
 Defined.
 
 Definition natltb (m n : nat) : bool := natgtb n m.
@@ -117,7 +119,27 @@ induction b; induction c; cbn; unfold_reflect;
 try (apply logeq_both_true; assumption);
 try (apply logeq_both_false; assumption).
 - intros h. apply r2. apply h. exact r1.
-- intros h. apply r1. apply h. exact r2. 
+- intros h. apply r1. apply h. exact r2.
+Qed.
+
+Lemma feq_reflect {X Y : UU} (f : X → Y) {x y : X} (b : bool)
+         (inj : ∏ x y, f x = f y → x = y)
+         (H : reflect (f x = f y) b)
+  : reflect (x = y) b.
+Proof.
+induction b; cbn; unfold_reflect.
+- apply inj. exact H.
+- intros p. exact (H (maponpaths f p)).
+Qed.
+
+Lemma reflect_feq {X Y : UU} (f : X → Y) {x y : X} (b : bool)
+        (inj : ∏ x y, f x = f y → x = y)
+        (H : reflect (x = y) b)
+  : reflect (f x = f y) b.
+Proof.
+induction b; cbn; unfold_reflect.
+- apply maponpaths. exact H.
+- intros p. apply H. apply inj. exact p.
 Qed.
 
 Lemma reflect_dirprod {X Y : UU} {b c : bool}
@@ -181,11 +203,11 @@ Qed.
 Lemma reflect_nateqb (m n : nat) : reflect (m = n) (nateqb m n).
 Proof.
 revert n. induction m as [|m Hm]; intro n.
-- induction n as [|n Hn].
-  + apply true_to_reflect. reflexivity.
-  + apply false_to_reflect. apply negpaths0sx.
-- induction n as [|n _].
-  + apply false_to_reflect. apply negpathssx0.
+- induction n as [|n Hn]; cbn; unfold_reflect.
+  + apply idpath.
+  + apply negpaths0sx.
+- induction n as [|n _]; cbn; unfold_reflect.
+  + apply negpathssx0.
   + simpl. apply (reflect_logrewr (X := m = n)).
     * split.
       -- intros H. apply maponpaths, H.
@@ -193,21 +215,67 @@ revert n. induction m as [|m Hm]; intro n.
     * apply Hm.
 Qed.
 
-Lemma reflect_to_decidable {X : UU} {b : bool} : reflect X b -> decidable X.
+Lemma reflect_to_decidable {X : UU} (b : bool) : reflect X b -> decidable X.
 Proof.
-intros H; induction b.
-- apply reflect_to_true in H. apply ii1. assumption.
-- apply reflect_to_false in H. apply ii2. assumption.
+intros H; induction b; unfold_reflect.
+- apply ii1. assumption.
+- apply ii2. assumption.
 Qed.
 
-Lemma decidable_to_reflect {X : UU} {b : bool} (H : decidable X)
+Lemma decidable_to_reflect {X : UU} (b : bool) (H : decidable X)
   : reflect X (coprodtobool H).
 Proof.
-induction H as [H|H]; simpl.
-- apply true_to_reflect. exact H.
-- apply false_to_reflect. exact H.
+induction H as [H|H]; simpl; unfold_reflect; exact H.
 Qed.
 
-Require Import UniMath.Foundations.All.
-Require Import UniMath.MoreFoundations.All.
-Require Import UniMath.Combinatorics.MoreLists.
+Definition uniteqB : unit → unit → bool := λ x y, true.
+
+Lemma reflect_uniteqB (x y : unit)
+  : reflect (x = y) true.
+Proof.
+  unfold_reflect.
+  induction x; induction y; apply idpath.
+Qed.
+
+Definition coprodeqB {X Y : UU}
+             (XeqB : X → X → bool)
+             (YeqB : Y → Y → bool)
+             (a b : X ⨿ Y) : bool
+  := match a with
+     | inl x => match b with inl x' => XeqB x x' | inr _ => false end
+     | inr y => match b with inl _ => false | inr y' => YeqB y y' end
+  end.
+
+Lemma reflect_coprodeqB
+        {X : UU} (XeqB : X → X → bool) (HX : ∏ x x', reflect (x = x') (XeqB x x'))
+        {Y : UU} (YeqB : Y → Y → bool) (HY : ∏ y y', reflect (y = y') (YeqB y y'))
+        (a b : X ⨿ Y)
+  : reflect (a = b) (coprodeqB XeqB YeqB a b).
+Proof.
+induction a; induction b; cbn; unfold_reflect.
+- apply reflect_feq.
+  + apply ii1_injectivity.
+  + apply HX.
+- apply negpathsii1ii2.
+- apply negpathsii2ii1.
+- apply reflect_feq.
+  + apply ii2_injectivity.
+  + apply HY.
+Qed.
+
+Definition total2eqB {X : UU} (Y : X → UU)
+             (eqB : ∏ x : X, Y x → ∏ x' : X, Y x' → bool)
+             (a b : ∑ x : X, Y x)
+  : bool
+  := eqB (pr1 a) (pr2 a) (pr1 b) (pr2 b).
+
+Lemma reflect_total2eqB {X : UU} (Y : X → UU)
+        (eqB : ∏ x : X, Y x → ∏ x' : X, Y x' → bool)
+        (H : ∏ x (y : Y x) x' (y' : Y x'), reflect (x,,y = x',,y') (eqB _ y _ y'))
+        (a b : ∑ x : X, Y x)
+  : reflect (a = b) (total2eqB Y eqB a b).
+Proof.
+induction a as (x,y); induction b as (x',y').
+unfold total2eqB. cbn.
+apply H.
+Qed.

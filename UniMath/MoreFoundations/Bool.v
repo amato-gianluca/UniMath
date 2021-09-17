@@ -18,6 +18,11 @@ Proof.
   intros b1 b2; induction b1; [exact b2|exact true].
 Defined.
 
+Definition iffb : bool → bool →  bool.
+Proof.
+  intros b1 b2; induction b1; [exact b2 |  exact (negb b2)].
+Defined.
+
 Lemma andb_is_associative :
   ∏ b1 b2 b3 : bool, andb (andb b1 b2) b3 = andb b1 (andb b2 b3).
 Proof.

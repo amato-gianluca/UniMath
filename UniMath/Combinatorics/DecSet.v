@@ -6,6 +6,7 @@ property [isdeceq X], just like an [hSet] is a type X endowed with the property 
 *)
 
 Require Import UniMath.Foundations.PartB.
+Require Import UniMath.Combinatorics.Reflect.
 
 Definition decSet: UU := ∑ (X: UU), isdeceq X.
 
@@ -16,3 +17,12 @@ Definition pr1decSet: decSet -> UU := pr1.
 Coercion pr1decSet: decSet >-> UU.
 
 Definition decproperty (X: decSet) := pr2 X.
+
+Definition decset_booleq {X : decSet} : X → X → bool
+  := booleq (decproperty X).
+
+Lemma reflect_decset_booleq {X : decSet} (x y : X)
+  : reflect (x = y) (decset_booleq x y).
+Proof.
+exact (decidable_to_reflect (decset_booleq x y) (decproperty X x y)).
+Qed.

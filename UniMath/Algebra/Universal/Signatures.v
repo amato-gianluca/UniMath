@@ -19,11 +19,11 @@ the _sort_ (or _range_).
 
 Definition signature : UU := ∑ (S: decSet) (O: hSet), O → list S × S.
 
-Definition sorts (σ: signature) := pr1 σ.
+Definition sorts (σ: signature) : decSet := pr1 σ.
 
-Definition names (σ: signature) := pr12 σ.
+Definition names (σ: signature) : hSet := pr12 σ.
 
-Definition ar (σ: signature) := pr22 σ.
+Definition ar (σ: signature) : names σ → list (sorts σ) × sorts σ := pr22 σ.
 
 Definition arity {σ: signature} (nm: names σ) : list (sorts σ) := pr1 (ar σ nm).
 

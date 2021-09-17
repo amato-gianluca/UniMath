@@ -4,6 +4,7 @@
 Require Import UniMath.Foundations.NaturalNumbers.
 Require Import UniMath.Combinatorics.Vectors.
 Require Export UniMath.Combinatorics.Lists.
+Require Import UniMath.Combinatorics.Reflect.
 Require Export UniMath.Combinatorics.DecSet.
 Require Export UniMath.Combinatorics.Maybe.
 
@@ -29,6 +30,12 @@ Infix "::" := cons: list_scope.
 Infix "++" := concatenate: list_scope.
 
 Local Open Scope list_scope.
+
+Definition vectolist {A : UU} {n : nat} (v : vec A n) : list A
+  := n,, v.
+
+Definition listtovec {A : UU} {n : nat} (l : list A) : vec A (length l)
+  := pr2 l.
 
 (** ** Proofs that [cons] is injective on both arguments.
 
@@ -439,3 +446,107 @@ Proof.
         contradiction prefixok.
         apply idpath.
 Defined.
+
+Definition list_all {A : UU} (P : A → UU) (l : list A) : UU
+  := vec_all P (listtovec (n := length l) l).
+
+Lemma list_all_nil {A : UU} (P : A → UU)
+  : list_all P [] = unit.
+Proof.
+  apply idpath.
+Defined.
+
+Lemma list_all_cons {A : UU} (P : A → UU) (a : A) (v : list A)
+  : list_all P (cons a v) = (P a × list_all P v).
+Proof.
+  apply idpath.
+Defined.
+
+Definition list_all2 {A B : UU} (P : A → B → UU)
+     (l : list A) (m : list B) : UU
+  := vec_all2_gen P
+                  (listtovec (n := length l) l)
+                  (listtovec (n := length m) m).
+
+Lemma list_all2_nil_nil {A B : UU} (P : A → B → UU)
+  : list_all2 P [] [] = unit.
+Proof.
+  apply idpath.
+Defined.
+                
+Lemma list_all2_cons_nil {A B : UU} (P : A → B → UU)
+    (a : A) (l : list A)
+  : list_all2 P (a :: l) [] = ∅.
+Proof.
+  apply idpath.
+Defined.
+              
+Lemma list_all2_nil_cons {A B : UU} (P : A → B → UU)
+    (b : B) (m : list B)
+  : list_all2 P [] (b :: m) = ∅.
+Proof.
+  apply idpath.
+Defined.
+
+Lemma list_all2_cons_cons {A B : UU} (P : A → B → UU)
+    (a : A) (b : B)
+    (l : list A) (m : list B)
+  : list_all2 P (a :: l) (b :: m) = (P a b × list_all2 P l m).
+Proof.
+  apply idpath.
+Defined.
+
+Lemma veceqB_dim_eq {X : UU} (eqB : X → X → bool)
+      {m} (u : vec X m)
+      {n} (v : vec X n)
+  : veceqB eqB u v = true → m = n.
+Proof.
+revert u n v. induction m as [|m Hm].
+- induction n as [|n _]; intros v.
+  + intros. apply idpath.
+  + simpl. exact (λ p, fromempty (nopathsfalsetotrue p)).
+- intros u. induction n as [|n _]; intros v.
+  + simpl. exact (λ p, fromempty (nopathsfalsetotrue p)).
+  + induction u as (x,xs).
+    induction v as (y,ys).
+    simpl. induction (eqB x y); cbn.
+    * intros H. apply maponpaths. eapply Hm. exact H.
+    * exact (λ p, fromempty (nopathsfalsetotrue p)).
+Defined.
+
+Lemma veceqB_neqdim {X : UU} (eqB : X → X → bool)
+             {m} (u : vec X m)
+             {n} (v : vec X n)
+  : m != n → veceqB eqB u v = false.
+Proof.
+intros neq.
+assert (H : veceqB eqB u v != true).
+- intros p. apply neq. eapply veceqB_dim_eq. exact p.
+- induction (veceqB eqB u v) .
+  + apply fromempty, H, idpath.
+  + apply idpath.
+Qed.
+
+Definition listeqB {X : UU} (eqB : X → X → bool)
+  : list X → list X → bool
+  := total2eqB (vec X) (@veceqB X eqB).
+
+Lemma reflect_listeqB {X : UU} (eqB : X → X → bool)
+        (H : ∏ x y : X, reflect (x = y) (eqB x y))
+  : ∏ l m : list X, reflect (l = m) (listeqB eqB l m).
+Proof.
+induction l as (n,u).
+induction m as (n',v).
+assert (C := reflect_nateqb n n').
+induction (nateqb n n'); unfold_reflect.
+- induction C.
+  unfold listeqB, total2eqB. simpl. apply reflect_feq.
+  + intros x y. apply fiber_paths_simple. exact isasetnat.
+  + apply reflect_veceqB. apply H.
+- unfold listeqB, total2eqB. simpl.
+  assert (p : veceqB eqB u v = false).
+  { apply veceqB_neqdim. exact C. }
+  rewrite p.
+  apply false_to_reflect.
+  intros q. apply C. apply base_paths in q. exact q.
+Qed.

@@ -15,6 +15,7 @@ Require Import UniMath.MoreFoundations.All.
 Require Import UniMath.MoreFoundations.Notations.
 Require Import UniMath.MoreFoundations.PartA.
 
+Require Import UniMath.Combinatorics.Reflect.
 Require Import UniMath.Combinatorics.Maybe.
 Require Import UniMath.Algebra.Universal.SortedTypes.
 Require Export UniMath.Algebra.Universal.Signatures.
@@ -25,27 +26,18 @@ Local Open Scope list.
 Local Open Scope transport.
 
 (* Move this in combinatorics maybe. *)
-Definition isjust {A : UU} : maybe A → bool := coprodtobool.
-
-Lemma isjust_just {A : UU} (a : A) : isjust (just a) = true.
-Proof.
-  apply idpath.
-Qed.
-
-Lemma isjust_nothing {A : UU} : isjust (nothing : maybe A) = false.
-Proof.
-  apply idpath.
-Qed.
 
 (** ** Definition of [oplist] (operations list). *)
 (**
-An [oplist] is a list of operation symbols, interpreted as commands to be executed by a stack
-machine. Elements of the stack are sorts. When an operation symbol is executed  its arity is
-popped out from the stack and replaced by its range. When a stack underflow occurs,
-or when the sorts present in the stack are not the ones expected by the operator, the stack goes into an
-error condition which is propagated by successive operations. A term is an [oplist] that produces
-a stack of length one, when execution starts from the empty stack. Operation symbols are executed in
-order from the last element of the [oplist] to the first.
+  An [oplist] is a list of operation symbols, interpreted as commands to be
+  executed by a stack machine.  Elements of the stack are sorts.  When an
+  operation symbol is executed its arity is popped out from the stack and
+  replaced by its range. When a stack underflow occurs, or when the sorts
+  present in the stack are not the ones expected by the operator, the stack
+  goes into an error condition which is propagated by successive operations.
+  A term is an [oplist] that produces a stack of length one, when execution
+  starts from the empty stack. Operation symbols are executed in
+  order from the last element of the [oplist] to the first.
 *)
 
 Local Definition oplist (σ: signature):= list (names σ).
@@ -76,30 +68,41 @@ Section Oplists.
 
   (** *** The [opexec] and [oplistexec] functions. *)
   (**
-     The function [opexec nm] is the stack transformation corresponding to the execution of
-     the operation symbol [nm], while [oplistexec l] returns the stack corresponding to the
-     execution of the entire oplist [l] starting from the empty stack. The list is executed from the last
-     to the first operation symbol. Finally [isaterm l] holds when the result of [oplistexec l]
-     is a stack of length one.
+     The function [opexec nm] is the stack transformation corresponding to
+     the execution of the operation symbol [nm], while [oplistexec l] returns
+     the stack corresponding to the execution of the entire oplist [l]
+     starting from the empty stack. The list is executed from the last to the
+     first operation symbol.  Finally [isaterm l] holds when the result of
+     [oplistexec l] is a stack of length one.
    *)
 
-  Local Definition opexec (nm: names σ): stack σ → stack σ
-    := flatmap (λ ss, just (sort nm :: ss)) ∘ flatmap (λ ss, prefix_remove (arity nm) ss).
+  Local Definition opexec (nm: names σ) : stack σ → stack σ
+    := flatmap (λ ss, just (sort nm :: ss)) ∘
+       flatmap (λ ss, prefix_remove (arity nm) ss).
 
   Local Definition oplistexec (l: oplist σ): stack σ := foldr opexec (just []) l.
 
   Local Definition isaterm (s: sorts σ) (l: oplist σ): UU := oplistexec l = just ([s]).
+
+  Local Lemma oplistexec_nil
+    : oplistexec (nil: oplist σ) = just nil.
+  Proof.
+    apply idpath.
+  Defined.
+
+  Local Lemma oplistexec_cons (nm: names σ) (l: oplist σ)
+    : oplistexec (nm :: l) = opexec nm (oplistexec l).
+  Proof.
+    apply idpath.
+  Defined.
 
   Local Lemma isapropisaterm (s: sorts σ) (l: oplist σ): isaprop (isaterm s l).
   Proof.
     apply isasetstack.
   Defined.
 
-  Local Definition can_opexec (nm : names σ) (ss : list (sorts σ)) : bool
-    := isjust (prefix_remove (arity nm) ss).
-
   Local Definition opexec_ok (nm:names σ) (ss: list (sorts σ)) : bool
-    := isjust (prefix_remove (arity nm) ss).
+    := maybetobool (prefix_remove (arity nm) ss).
 
   Local Lemma opexec_not_ok (nm:names σ) (ss: list (sorts σ))
     : opexec_ok nm ss = false
@@ -108,11 +111,15 @@ Section Oplists.
   Proof.
     unfold opexec, opexec_ok, funcomp. cbn.
     induction (prefix_remove (arity nm) ss) as [ok | error]; cbn.
-    - exact (fromempty ∘ nopathstruetofalse).
-    - intros _. split.
-      + apply idpath.
-      + unfold nothing. apply maponpaths. apply isapropunit.
-  Qed.
+    - abstract (exact (fromempty ∘ nopathstruetofalse)).
+    - intros _.
+      abstract
+      ( split;
+        [ apply idpath
+        | abstract (unfold nothing; apply maponpaths, isapropunit)
+        ]
+      ).
+  Defined.
 
   Local Lemma opexec_is_ok (nm:names σ) (ss: list (sorts σ))
     : opexec_ok nm ss = true →
@@ -123,8 +130,8 @@ Section Oplists.
     unfold opexec, opexec_ok, funcomp. cbn.
     induction (prefix_remove (arity nm) ss) as [ok | error]; cbn.
     - intros _. exists ok. split; apply idpath.
-    - exact (fromempty ∘ nopathsfalsetotrue).
-  Qed.
+    - abstract (exact (fromempty ∘ nopathsfalsetotrue)).
+  Defined.
 
   Local Lemma opexec_dec_alt (nm: names σ) (ss: list (sorts σ))
     : (∑ ss': list (sorts σ),
@@ -139,7 +146,7 @@ Section Oplists.
     - apply opexec_not_ok. exact hp.
   Defined.
 
-  Local Lemma opexec_dec' (nm: names σ) (ss: list (sorts σ))
+  Local Lemma opexec_dec (nm: names σ) (ss: list (sorts σ))
     : (opexec nm (just ss) = nothing ×
        prefix_remove (arity nm) ss = nothing)
       ⨿
@@ -151,56 +158,39 @@ Section Oplists.
     apply opexec_dec_alt.
   Defined.
 
-  Local Lemma opexec_dec (nm: names σ) (ss: list (sorts σ))
-    : (opexec nm (just ss) = nothing × prefix_remove (arity nm) ss = nothing)
-      ⨿
-      ∑ ss': list (sorts σ),
-      (opexec nm (just ss) = just ((sort nm) :: ss') ×
-       prefix_remove (arity nm) ss = just ss').
-  Proof.
-    unfold opexec, just.
-    simpl.
-    induction (prefix_remove (arity nm) ss) as [ ss' | error ].
-    - apply ii2.
-      exists ss'.
-      split; apply idpath.
-    - apply ii1.
-      split.
-      + apply idpath.
-      + induction error.
-        apply idpath.
-  Defined.
-
   Local Lemma opexec_just_f
         (nm: names σ) (ss: list (sorts σ)) (arityok: isprefix (arity nm) ss)
     : ∑ ss': list (sorts σ),
         opexec nm (just ss) = just ((sort nm) :: ss') ×
         prefix_remove (arity nm) ss = just ss'.
   Proof.
-    induction (opexec_dec nm ss) as [err | ok].
-    - induction err as [_  err].
-      contradicts arityok err.
-    - assumption.
+    unfold isprefix in arityok. unfold opexec. cbn.
+    induction (prefix_remove (arity nm)) as [ss' | err].
+    - exists ss'. apply make_dirprod; apply idpath.
+    - abstract (apply fromempty; apply arityok; unfold nothing;
+        apply maponpaths; apply isapropunit).
   Defined.
 
   Local Lemma opexec_just_b (nm: names σ) (st: stack σ) (ss: list (sorts σ))
-    : opexec nm st = just ss → ∑ ss', ss = sort nm :: ss' × st = just ((arity nm) ++ ss').
+    : opexec nm st = just ss
+      → ∑ ss',
+          ss = sort nm :: ss' ×
+          st = just ((arity nm) ++ ss').
   Proof.
     intro scons.
     induction st as [stok | sterror].
     - induction (opexec_dec nm stok) as [scons_err | scons_ok].
       + induction scons_err as [scons_err _].
-        set (H := ! scons @ scons_err).
-        contradiction (negpathsii1ii2 _ _ H).
+        abstract (
+          set (H := ! scons @ scons_err);
+          contradiction (negpathsii1ii2 _ _ H)
+        ).
       + induction scons_ok as [ss' [X1 X2]].
         exists ss'.
         split.
-        * apply just_injectivity.
-          exact (!scons @ X1).
-        * apply maponpaths.
-          apply prefix_remove_back.
-          assumption.
-   -  contradiction (negpathsii2ii1 _ _ scons).
+        * apply just_injectivity; exact (!scons @ X1).
+        * apply maponpaths; apply prefix_remove_back; assumption.
+   -  abstract (contradiction (negpathsii2ii1 _ _ scons)).
   Defined.
 
   Local Lemma opexec_zero_b (nm: names σ) (st: stack σ)
@@ -208,30 +198,22 @@ Section Oplists.
   Proof.
     induction st as [stok | sterror].
     - induction (opexec_dec nm stok) as [scons_err| scons_ok].
-      + induction scons_err as [scons_err _].
-        intro H.
-        set (H' :=  (!! scons_err @ H)).
-        apply negpathsii1ii2 in H'.
-        assumption.
-      + induction scons_ok as [p [proofp _]].
-        intro H.
-        set (H' :=  (!proofp @ H)).
-        apply ii1_injectivity in H'.
-        apply negpathsconsnil in H'.
-        assumption.
+      + abstract(
+          induction scons_err as [scons_err _];
+          intro H;
+          set (H' :=  (!! scons_err @ H));
+          apply negpathsii1ii2 in H';
+          assumption
+        ).
+      + abstract (
+          induction scons_ok as [p [proofp _]];
+          intro H;
+          set (H' :=  (!proofp @ H));
+          apply ii1_injectivity in H';
+          apply negpathsconsnil in H';
+          assumption
+      ).
     - apply negpathsii2ii1.
-  Defined.
-
-  Local Lemma oplistexec_nil
-    : oplistexec (nil: oplist σ) = just nil.
-  Proof.
-    apply idpath.
-  Defined.
-
-  Local Lemma oplistexec_cons (nm: names σ) (l: oplist σ)
-    : oplistexec (nm :: l) = opexec nm (oplistexec l).
-  Proof.
-    apply idpath.
   Defined.
 
   Local Lemma oplistexec_zero_b (l: oplist σ): oplistexec l = just nil → l = nil.
@@ -286,11 +268,8 @@ Section Oplists.
       rewrite scons.
       simpl.
       rewrite concatenateStep.
-      unfold opexec.
-      simpl.
-      erewrite prefix_remove_concatenate.
-      * apply idpath.
-      * assumption.
+      unfold opexec. simpl.
+      erewrite prefix_remove_concatenate; [apply idpath | assumption].
   Defined.
 
  Local Lemma oplistexec_concatenate (l1 l2: oplist σ)
@@ -312,15 +291,13 @@ Section Oplists.
       rewrite <- IHxs.
       + apply idpath.
       + intro error.
-        rewrite error in noerror.
-        contradiction.
+        abstract (rewrite error in noerror; contradiction).
   Defined.
 
   (** *** The [oplistsplit] function. *)
-
   (**
-     [oplistsplit] splits an oplist into an oplist of up to [n] terms and an oplist of the remaining
-     terms.
+     [oplistsplit] splits an oplist into an oplist of up to [n] terms and an
+     oplist of the remaining terms.
    *)
 
   Local Definition oplistsplit (l: oplist σ) (n: nat): oplist σ × oplist σ.
@@ -474,11 +451,11 @@ Section Oplists.
           rewrite t1len.
           rewrite natpluscomm.
           apply plusminusnmm.
-   Unshelve.
-   rewrite length_concatenate.
-   apply natlehandplusl.
-   rewrite ssdef in nlehss.
-   assumption.
+    Unshelve.
+    rewrite length_concatenate.
+    apply natlehandplusl.
+    rewrite ssdef in nlehss.
+    assumption.
   Defined.
 
   Local Corollary oplistsplit_self {l: oplist σ} {ss: list (sorts σ)}
@@ -510,11 +487,12 @@ Section Oplists.
 
 End Oplists.
 
+(** ** Terms and related constructors and destructors. *)
+(**
+   A [term] is an oplist together with the proof it is a term.
+*)
+
 Section Term.
-
-  (** ** Terms and related constructors and destructors. *)
-
-  (**  A [term] is an oplist together with the proof it is a term. *)
 
   Local Definition term (σ: signature) (s: sorts σ): UU
     := ∑ t: oplist σ, isaterm s t.
@@ -550,8 +528,8 @@ Section Term.
 
   (** *** The [vecoplist2oplist] and [oplist2vecoplist] functions *)
   (**
-  These functions transform a vec of [n] oplists into an oplists of stack [n]
-  ([vecoplist2oplist]) and viceversa ([oplist2vecoplist]).
+     These functions transform a vec of [n] oplists into an oplists of stack
+     [n] ([vecoplist2oplist]) and viceversa ([oplist2vecoplist]).
   *)
 
   Local Definition vecoplist2oplist {n: nat} (v: vec (oplist σ) n): oplist σ
@@ -781,7 +759,7 @@ Section Term.
     apply cons_inj2 in tnorm.
     apply vecoplist2oplist_inj in tnorm.
     apply tnorm.
-  Defined.
+  Qed.
 
   (** *** Miscellanea properties for terms. *)
 
@@ -791,14 +769,14 @@ Section Term.
     induction (oplistexec_positive_b _ _ _ stackl) as [x [xs lstruct]].
     induction (! lstruct).
     apply idpath.
-  Defined.
+  Qed.
 
   Local Lemma term_notnil {X: UU} {s: sorts σ} {t: term σ s}: length t ≤ 0 → X.
   Proof.
     intro tlen.
     apply natlehneggth in tlen.
     contradicts tlen (length_term t).
-  Defined.
+  Qed.
 
 End Term.
 
@@ -894,7 +872,7 @@ Section TermInduction.
           apply IHn.
           -- apply m1lehn.
           -- apply m2lehn.
-  Defined.
+  Qed.
 
   Local Lemma nat_rect_step {P: nat → UU} (a: P 0) (IH: ∏ n: nat, P n → P (S n)) (n: nat):
     nat_rect P a IH (S n) = IH n (nat_rect P a IH n).
@@ -936,7 +914,7 @@ Section TermInduction.
     - apply isreflnatleh.
     - apply natlthsntoleh.
       apply x1.
-  Defined.
+  Qed.
 
   (** *** Immediate applications of term induction *)
 
@@ -950,7 +928,10 @@ Section TermInduction.
                 (λ (nm: names σ) (v: (term σ)⋆ (arity nm)) (depths: hvec (h1map_vec (λ _ _, nat) v)),
                    1 + h2foldr (λ _ _, max) 0 depths).
 
-  Local Definition fromterm {A: sUU (sorts σ)} (op : ∏ (nm : names σ), A⋆ (arity nm) → A (sort nm)) {s: sorts σ}
+  Local Definition fromterm
+        {A: sUU (sorts σ)}
+        (op : ∏ (nm : names σ), A⋆ (arity nm) → A (sort nm))
+        {s: sorts σ}
     : term σ s → A s
     := term_ind (λ s _, A s) (λ nm v rec, op nm (h2lower rec)).
 
@@ -963,7 +944,7 @@ Section TermInduction.
     rewrite term_ind_step.
     rewrite h2lower_h1map_h1lift.
     apply idpath.
-  Defined.
+  Qed.
 
   Lemma build_term_inj (nm1 nm2: names σ) (v1: (term σ)⋆ (arity nm1)) (v2: (term σ)⋆ (arity nm2)) (p: sort nm1 = sort nm2)
     : p # build_term nm1 v1 = build_term nm2 v2 → ∑ eqnm: nm1 = nm2, (transportf (λ op, (term σ)⋆ (arity op)) eqnm v1) = v2.
@@ -988,12 +969,26 @@ Section TermInduction.
 
 End TermInduction.
 
+(** ** isatermB *)
+
+Definition isatermB {σ: signature} (s : sorts σ) (l : oplist σ) : bool
+  := maybeeqB (listeqB decset_booleq) (oplistexec l) (just (s :: [])).
+
+Lemma isaterm_reflect {σ: signature} (s : sorts σ) (l : oplist σ)
+  : reflect (isaterm s l) (isatermB s l).
+Proof.
+  unfold isaterm, isatermB.
+  apply reflect_maybeeqB. intros.
+  apply reflect_listeqB. intros.
+  apply reflect_decset_booleq.
+Qed.
+
 (** ** Notations for ground terms. *)
 (**
-Since [term], [termset], [fromterm] and [fromtermstep]  will be redefined in
-[UniMath.Algebra.Universal.VTerms] in their more general form with variables, we introduce
-here notations [gterm], [make_gterm] and similar to make the ground version publically
-available with special names.
+   Since [term], [termset], [fromterm] and [fromtermstep] will be redefined
+   in [UniMath.Algebra.Universal.VTerms] in their more general form with
+   variables, we introduce here notations [gterm], [make_gterm] and similar
+   to make the ground version publically available with special names.
 *)
 
 Notation gterm := term.

@@ -63,7 +63,7 @@ Notation "A ⋆" := (star A) (at level 3, format "'[ ' A '⋆' ']'"): sorted_sco
 [f] to a [list S]-indexed mapping between [list S]-indexed sets [star X] and [star Y].
 *)
 
-Definition starfun {S: UU} {X Y: sUU S} (f: sfun X Y) : sfun X⋆ Y⋆ := λ s: list S, h1map f.
+Definition starfun {S: UU} {X Y: sUU S} (f: X s→ Y) : X⋆ s→ Y⋆ := λ s: list S, h1map f.
 
 Notation "f ⋆⋆" := (starfun f) (at level 3, format "'[ ' f '⋆⋆' ']'"): sorted_scope.
 
