@@ -11,7 +11,9 @@ Local Open Scope sorted.
 (** ** Basic definitions. *)
 
 Definition algebra (σ: signature): UU
-  := ∑ A: sUU (sorts σ), ∏ nm: names σ, A⋆ (arity nm) → A (sort nm).
+  := ∑ A: sUU (sorts σ), ∏ (s: sorts σ) (nm: names s), A⋆ (arity nm) → A s.
+
+Definition supportset {σ: signature} (A: algebra σ) : sUU (sorts σ) := pr1 A.
 
 Definition support {σ: signature} (A: algebra σ): sUU (sorts σ) := pr1 A.
 
@@ -19,12 +21,12 @@ Coercion support: algebra >-> sUU.
 
 Definition ops {σ: signature} (A: algebra σ) := pr2 A.
 
-Definition make_algebra {σ: signature} (A : sUU (sorts σ)) (ops: ∏ nm: names σ, A⋆ (arity nm) → A (sort nm))
+Definition make_algebra {σ: signature} (A : sUU (sorts σ)) (ops: ∏ (s: sorts σ) (nm: names s), A⋆ (arity nm) → A s)
   : algebra σ := A ,, ops.
 
-Definition dom {σ: signature} (A: algebra σ) (nm: names σ): UU := A⋆ (arity nm).
+Definition dom {σ: signature} (A: algebra σ) {s: sorts σ} (nm: names s): UU := A⋆ (arity nm).
 
-Definition rng {σ: signature} (A: algebra σ) (nm: names σ): UU := support A (sort nm).
+Definition rng {σ: signature} (A: algebra σ) {s: sorts σ} (nm: names s): UU := support A s.
 
 Definition has_supportsets {σ: signature} (A: algebra σ): UU
   := ∏ s: sorts σ, isaset (support A s).
@@ -42,7 +44,8 @@ Definition make_algebra_simple_single_sorted
   : algebra σ.
 Proof.
   exists (λ _, A).
-  unfold arity.
+  simpl.
+  intro s.
   revert σ ops.
   refine (list_ind _ _ _).
   - intros.
@@ -58,6 +61,7 @@ Proof.
     + exact (IHxs (pr2 ops) (nm ,, nmproof)).
 Defined.
 
+(*
 Definition make_algebra_simple
     (σ: signature_simple)
     (A: vec UU (pr1 σ))
@@ -85,11 +89,12 @@ Proof.
       exact op.
     + exact (IHxs ops (nm ,, nmproof)).
 Defined.
+*)
 
 (** ** Homomorphisms of algebras. *)
 
 Definition ishom {σ: signature} {A1 A2: algebra σ} (h: A1 s→ A2) : UU
-  := ∏ (nm: names σ) (x: dom A1 nm), h _ (ops A1 nm x) = ops A2 nm (h⋆⋆ _ x).
+  := ∏ (s: sorts σ) (nm: names s) (x: dom A1 nm), h _ (ops A1 s nm x) = ops A2 s nm (h⋆⋆ _ x).
 
 Definition hom {σ: signature} (A1 A2: algebra σ): UU := ∑ (h: A1 s→ A2), ishom h.
 
@@ -119,6 +124,8 @@ Proof.
   intros.
   apply impred_isaprop.
   intros.
+  apply impred_isaprop.
+  intro.
   apply setprop.
 Defined.
 
@@ -169,7 +176,7 @@ Definition homcomp {σ: signature} {a1 a2 a3: algebra σ} (h1: a1 ↷ a2) (h2: a
 (** ** The unit algebra and the proof it is final. *)
 
 Definition unitalgebra (σ: signature): algebra σ
-  := make_algebra (sunit (sorts σ)) tosunit.
+  := make_algebra (sunit (sorts σ)) (λ _, tosunit).
 
 Lemma ishomtounit {σ: signature} (A: algebra σ): @ishom σ A (unitalgebra σ) tosunit.
 Proof.
@@ -195,7 +202,7 @@ Proof.
 Defined.
 
 (** ** Helpers for working with curried functions *)
-
+(*
 Definition ops' {σ: signature} (A: algebra σ) (nm: names σ) := currify (ops A nm).
 
 Definition make_algebra'
@@ -222,6 +229,7 @@ Definition make_algebra_simple'
     (A: vec UU (pr1 σ))
     (ops: (λ a, iterfun (vec_map (el A) (pr2 (dirprod_pr1 a))) (el A (dirprod_pr2 a)))⋆ (pr2 σ))
   : algebra σ := make_algebra_simple σ A (h1map (λ _, uncurrify) ops).
+*)
 
 (** ** Algebras with hSets as carriers *)
 
