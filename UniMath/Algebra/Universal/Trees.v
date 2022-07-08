@@ -44,30 +44,22 @@ Section Trees.
 
 Variables (σ: signature).
 
-Definition Tree (n: nat): forall s: sorts σ, UU.
+Definition vecmax1 {A : nat → UU} {n} : ∏ (v : vec (∑ m, A m) n), nat :=
+  vec_foldr (λ a, max (pr1 a)) 0.
+
+Definition vecmax {n} : ∏ (v : vec nat n), nat :=
+  vec_foldr max 0.
+
+Definition TreeP: ∏ (n:nat) (s:sorts σ), UU.
 Proof.
-  induction n.
-  - intro s. exact unit.
-  - intro s. refine (∑ (nm: names s), ∑ (v:hvec _), ?????).
-    apply (vec_map IHn (pr2 (arity nm))).
+  apply (nat_wf (λ n, ∏ s: sorts σ, UU)).
+  intros n rec s.
+  refine (∑ nm: names s, _).
+  refine (∑ v: vec (∑ m (lt: m < n) (t: sorts σ), rec m lt t) (pr1 (arity nm)), _).
+  exact (S (vecmax1 v) = n).
 Defined.
 
-
-Definition Tree (n: nat): forall s: sorts σ, UU.
-Proof.
-  induction n.
-  - intro s. exact unit.
-  - intro s. refine (∑ (nm: names s), (hvec _)).
-    apply (vec_map IHn (pr2 (arity nm))).
-Defined.
-
-Definition vecmax {n : nat} : forall v:vec nat n, nat.
-Proof.
-  induction n.
-  - intros. exact 0.
-  - simpl. intros p. induction p as (h,t).
-    exact (max h (IHn t)).
-Defined.
+Definition Tree (s:sorts σ) : UU := ∑ n:nat, TreeP n s.
 
 Definition depth {n:nat} {s:sorts σ} : forall (t:Tree n s), nat.
 Proof.
