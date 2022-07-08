@@ -20,6 +20,26 @@ Local Open Scope sorted.
 Local Open Scope hvec.
 Local Open Scope list.
 
+Theorem nat_wf :
+  ∏ (P : nat → UU)
+    (ind : ∏ n, (∏ m, m < n → P m) → P n),
+  ∏ n, P n.
+Proof.
+  intros P ind.
+  assert (∏ n m, m ≤ n → P m).
+  - induction n.
+    + induction m.
+      * intros _. apply ind. cbv. intros m p.
+        induction (nopathsfalsetotrue p).
+      * cbv. intros p. induction (nopathsfalsetotrue p).
+    + intros m leS. apply ind. intros p lt. apply IHn.
+      induction m as [|m _].
+      * induction (negnatlthn0 _ lt).
+      * change (S m ≤ S n) with (m ≤ n) in leS.
+        apply (istransnatleh (m := m)). exact lt. exact leS.
+  - intros n. eapply X. apply isreflnatleh.
+Defined.
+
 Section Trees.
 
 Variables (σ: signature).
