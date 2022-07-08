@@ -20,12 +20,55 @@ Local Open Scope sorted.
 Local Open Scope hvec.
 Local Open Scope list.
 
-Definition Tree (σ: signature) (n: nat): UU.
+Section Trees.
+
+Variables (σ: signature).
+
+Definition Tree (n: nat): forall s: sorts σ, UU.
 Proof.
   induction n.
-  - exact unit.
-  - exact (∑ (s: names σ), (hvec (vec_map  (λ s, Tree σ 
-  
+  - intro s. exact unit.
+  - intro s. refine (∑ (nm: names s), ∑ (v:hvec _), ?????).
+    apply (vec_map IHn (pr2 (arity nm))).
+Defined.
+
+
+Definition Tree (n: nat): forall s: sorts σ, UU.
+Proof.
+  induction n.
+  - intro s. exact unit.
+  - intro s. refine (∑ (nm: names s), (hvec _)).
+    apply (vec_map IHn (pr2 (arity nm))).
+Defined.
+
+Definition vecmax {n : nat} : forall v:vec nat n, nat.
+Proof.
+  induction n.
+  - intros. exact 0.
+  - simpl. intros p. induction p as (h,t).
+    exact (max h (IHn t)).
+Defined.
+
+Definition depth {n:nat} {s:sorts σ} : forall (t:Tree n s), nat.
+Proof.
+  generalize s. clear s.
+  induction n.
+  - intros. exact 0.
+  - intros s t. simpl in t.
+    induction t as (nm, v).
+    exact (S (vecmax (h1map_vec IHn v))).
+Defined.
+
+Definition resize n : forall (s : sorts σ) (t:Tree n s), Tree (depth t) s.
+Proof.
+  induction n.
+  - simpl. intros. exact tt.
+  - intros s t. simpl in t.
+    induction t as (nm,v).
+    refine (nm,, _).
+    refine (exists )
+    simpl.
+
 (** ** Definition of [oplist] (operations list). *)
 (**
 An [oplist] is a list of operation symbols, interpreted as commands to be executed by a stack
