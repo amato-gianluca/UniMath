@@ -1648,10 +1648,6 @@ Proof.
   intro x0'. apply (eqreltrans R _ _ _ a x0').
 Defined.
 
-
-
-
-
 (** *** Universal property of [seqtquot R] for functions to sets satisfying compatibility condition [iscomprelfun] *)
 
 
@@ -1704,7 +1700,9 @@ Theorem setquotunivcomm {X : UU} (R : eqrel X) (Y : hSet) (f : X -> Y)
   ∏ x : X, setquotuniv R Y f is (setquotpr R x) = f x.
 Proof.
   intros. unfold setquotuniv. unfold setquotpr.
-  simpl. apply idpath.
+  simpl.
+  rewrite hinhunivpr.
+  apply idpath.
 Defined.
 
 
@@ -1762,10 +1760,24 @@ Definition setquotfuncomm {X Y : UU} (RX : eqrel X) (RY : eqrel Y)
            (f : X -> Y) (is : iscomprelrelfun RX RY f) :
   ∏ x : X, setquotfun RX RY f is (setquotpr RX x) = setquotpr RY (f x).
 Proof.
-  intros. simpl. apply idpath.
+  intros. simpl.
+  unfold setquotfun.
+  simpl.
+  unfold setquotuniv.
+  simpl.
+  rewrite hinhunivpr.
+  apply idpath.
 Defined.
 
-
+Definition setquotfuncomm' {X Y : UU} (RX : eqrel X) (RY : eqrel Y)
+           (f : X -> Y) (is : iscomprelrelfun RX RY f) :
+  setquotfun RX RY f is ∘ (setquotpr RX) = setquotpr RY ∘ f.
+Proof.
+  unfold funcomp.
+  apply funextfun.
+  intro.
+  apply setquotfuncomm.
+Defined.
 
 (** *** Universal property of [setquot] for predicates of one and several variables *)
 
@@ -1860,6 +1872,7 @@ Lemma issurjsetquotfun {X Y : UU} (RX : eqrel X) (RY : eqrel Y) (f : X -> Y)
   issurjective (setquotfun RX RY f is1).
 Proof.
   intros. apply (issurjtwooutof3b (setquotpr RX)).
+  rewrite setquotfuncomm'.
   apply (issurjcomp f (setquotpr RY) is (issurjsetquotpr RY)).
 Defined.
 
@@ -1882,6 +1895,7 @@ Proof.
     }
     apply (setquotuniv2prop RX (λ x x', make_hProp _ (is x x'))).
     simpl. intros x x'. intro e.
+    repeat rewrite setquotfuncomm in e.
     set (e' := invweq (weqpathsinsetquot RY (f x) (f x')) e).
     apply (weqpathsinsetquot RX _ _ (is2 x x' e')).
 Defined.
@@ -1911,6 +1925,7 @@ Proof.
     apply (setquotunivprop
              RX (λ a0, make_hProp _ (isasetsetquot RX (gg (ff a0)) a0))).
     simpl. intro x. unfold ff. unfold gg.
+    repeat rewrite setquotfuncomm.
     apply (maponpaths (setquotpr RX) (homotinvweqweq f x)).
   }
   assert (efg : ∏ a, paths (ff (gg a)) a).
@@ -1918,6 +1933,7 @@ Proof.
     apply (setquotunivprop
              RY (λ a0, make_hProp _ (isasetsetquot RY (ff (gg a0)) a0))).
     simpl. intro x. unfold ff. unfold gg.
+    repeat rewrite setquotfuncomm.
     apply (maponpaths (setquotpr RY) (homotweqinvweq f x)).
   }
   apply (isweq_iso _ _ egf efg).
@@ -1935,12 +1951,6 @@ Proof.
   apply (isinclsetquotfun RX RY f is1 is2).
   apply (issurjsetquotfun RX RY f is is1).
 Defined.
-
-
-
-(** *** [setquot] with respect to the product of two relations *)
-
-
 
 Definition setquottodirprod {X Y : UU} (RX : eqrel X) (RY : eqrel Y)
            (cc : setquot (eqreldirprod RX RY)) :
@@ -1966,7 +1976,12 @@ Definition dirprodtosetquot {X Y : UU} (RX : hrel X) (RY : hrel Y)
   setquot (hreldirprod RX RY)
   := make_setquot _ _ (iseqclassdirprod (pr2 (pr1 cd)) (pr2 (pr2 cd))).
 
-
+Lemma homotweqinvweq' {X Y : UU} (w : X ≃ Y) (y : Y): pr1 w (invmap w y) = y.
+Proof.
+  change (pr1 w (invmap w y)) with (pr1weq w (invmap w y)).
+  apply homotweqinvweq.
+Defined.
+  
 Theorem weqsetquottodirprod {X Y : UU} (RX : eqrel X) (RY : eqrel Y) :
   weq (setquot (eqreldirprod RX RY)) ((setquot RX) × (setquot RY)).
 Proof.
@@ -1981,7 +1996,11 @@ Proof.
     intro xy. induction xy as [ x y ]. simpl.
     apply (invmaponpathsincl _ (isinclpr1setquot _)).
     simpl. apply funextsec. intro xy'.
-    induction xy' as [ x' y' ]. apply idpath.
+    induction xy' as [ x' y' ].
+    unfold setquotuniv.
+    simpl.
+    repeat rewrite hinhunivpr.
+    apply idpath.
   }
   assert (efg : ∏ a : _, paths (f (g a)) a).
   {
@@ -1992,18 +2011,66 @@ Proof.
     apply (setquotunivprop RY (λ ay : _, (make_hProp _ (isasetsetquot _ _ _)))).
     intro y. simpl.
     apply (invmaponpathsincl _ (isinclpr1setquot _)). apply funextsec.
-    intro x0. simpl. apply idpath. generalize ax. clear ax.
+    intro x0.   
+    unfold setquotuniv.
+    unfold pr1image.
+    unfold hinhuniv.
+    unfold equiv_ishinh.
+    unfold equiv_ishinh_UU.
+    unfold eqax0.
+    simpl.
+    unfold ishinhsubtypedirprod.
+    unfold hinhfun.
+    unfold equiv_ishinh.
+    unfold equiv_ishinh_UU.
+    simpl.
+    rewrite homotweqinvweq.
+    unfold hinhand.
+    unfold equiv_ishinh.
+    unfold equiv_ishinh_UU.
+    rewrite homotweqinvweq'.
+    simpl.
+    unfold hinhpr.
+    unfold equiv_ishinh.
+    unfold equiv_ishinh_UU.
+    rewrite homotweqinvweq'.
+    rewrite homotweqinvweq'.
+    simpl.
+    unfold dirprodtosetquot.
+    cbn beta delta - [hreldirprod setquotinset iscompsetquotpr] iota zeta.
+    apply idpath. generalize ax. clear ax.
     apply (setquotunivprop RX (λ ax : _, (make_hProp _ (isasetsetquot _ _ _)))).
     intro x. simpl. generalize ay. clear ay.
     apply (setquotunivprop RY (λ ay : _, (make_hProp _ (isasetsetquot _ _ _)))).
     intro y. simpl.
     apply (invmaponpathsincl _ (isinclpr1setquot _)). apply funextsec.
-    intro x0. simpl. apply idpath.
+    intro x0. simpl.
+    unfold setquotuniv.
+    unfold hinhuniv.
+    unfold eqax0.
+    simpl.
+    unfold ishinhsubtypedirprod.
+    unfold hinhfun.
+    unfold equiv_ishinh.
+    unfold equiv_ishinh_UU.
+    rewrite homotweqinvweq.
+    unfold hinhand.
+    unfold equiv_ishinh.
+    unfold equiv_ishinh_UU.
+    rewrite homotweqinvweq'.
+    simpl.
+    unfold hinhpr.
+    unfold equiv_ishinh.
+    unfold equiv_ishinh_UU.
+    rewrite homotweqinvweq'.
+    rewrite homotweqinvweq'.
+    apply idpath.
   }
   apply (isweq_iso _ _ egf efg).
+Admitted.
+(** It takes years if we terminated with Defined 
 Defined.
-
-
+*)
 
 (** *** Universal property of [setquot] for functions of two variables *)
 
@@ -2050,7 +2117,26 @@ Theorem setquotuniv2comm {X : UU} (R : eqrel X) (Y : hSet) (f : X -> X -> Y)
         (is : iscomprelfun2 R f) :
   ∏ x x' : X, setquotuniv2 R Y f is (setquotpr R x) (setquotpr R x') = f x x'.
 Proof.
-  intros. apply idpath.
+  intros.
+  unfold setquotuniv2.
+  unfold setquotuniv.
+  unfold hinhuniv.
+  unfold eqax0.
+  simpl.
+  unfold hinhpr.
+  unfold equiv_ishinh.
+  unfold equiv_ishinh_UU.
+  unfold ishinhsubtypedirprod.
+  unfold hinhfun.
+    unfold equiv_ishinh.
+  unfold equiv_ishinh_UU.
+  rewrite homotweqinvweq.
+  unfold hinhand.
+  unfold ddualand.
+  unfold equiv_ishinh.
+  unfold equiv_ishinh_UU.
+  repeat rewrite homotweqinvweq'.
+  apply idpath.
 Defined.
 
 
@@ -2113,7 +2199,10 @@ Theorem setquotfun2comm {X Y : UU} (RX : eqrel X) (RY : eqrel Y)
   ∏ (x x' : X), setquotfun2 RX RY f is (setquotpr RX x) (setquotpr RX x')
                 = setquotpr RY (f x x').
 Proof.
-  intros. apply idpath.
+  intros. 
+  unfold setquotfun2.
+  rewrite setquotuniv2comm.
+  apply idpath.
 Defined.
 
 
@@ -2163,6 +2252,14 @@ Definition setquotbooleq {X : UU} (R : eqrel X)
   := setquotuniv2 R (make_hSet _ (isasetbool)) (setquotbooleqint R is)
                   (setquotbooleqintcomp R is).
 
+Lemma setquotbooleqeqint {X: UU} (R: eqrel X) (is: ∏ x x' : X, isdecprop (R x x')) (x x': X) 
+  : setquotbooleq R is (setquotpr R x) (setquotpr R x') = setquotbooleqint R is x x'.
+Proof.
+  unfold setquotbooleq.
+  rewrite setquotuniv2comm.
+  apply idpath.
+Defined.
+  
 Lemma setquotbooleqtopaths {X : UU} (R : eqrel X)
       (is : ∏ x x' : X, isdecprop (R x x')) (x x' : setquot R) :
   setquotbooleq R is x x' = true  -> x = x'.
@@ -2175,8 +2272,7 @@ Proof.
   }
   apply (setquotuniv2prop R (λ x x', make_hProp _ (isp x x'))). simpl.
   intros x x'.
-  change ((setquotbooleqint R is x x') = true
-          -> paths (setquotpr R x) (setquotpr R x')).
+  rewrite setquotbooleqeqint.
   unfold setquotbooleqint. induction (pr1 (is x x')) as [ i1 | i2 ].
   - intro. apply (weqpathsinsetquot R _ _ i1).
   - intro H. induction (nopathsfalsetotrue H).
@@ -2190,12 +2286,13 @@ Proof.
   apply (setquotunivprop
            R (λ x, make_hProp _ (isasetbool (setquotbooleq R is x x) true))).
   simpl. intro x0.
-  change ((setquotbooleqint R is x0 x0) = true).
+  rewrite setquotbooleqeqint.
   unfold setquotbooleqint. induction (pr1 (is x0 x0)) as [ i1 | i2 ].
   - apply idpath.
   - induction (i2 (eqrelrefl R x0)).
 Defined.
 
+(*** UNIVERSE PROBLEMS *****
 Definition isdeceqsetquot {X : UU} (R : eqrel X)
            (is : ∏ x x' : X, isdecprop (R x x')) : isdeceq (setquot R).
 Proof.
@@ -2205,7 +2302,7 @@ Proof.
   - apply ii2. intro e.
     induction (falsetonegtrue _ ni (setquotpathstobooleq R is x x' e)).
 Defined.
-
+****)
 
 
 (** *** Relations on quotient sets
@@ -2257,6 +2354,14 @@ Defined.
 Definition quotrel {X : UU} {R L : hrel X} (is : iscomprelrel R L) :
   hrel (setquot R) := setquotuniv2 R hPropset L is.
 
+Lemma quotrelcomm {X : UU} {R: eqrel X} {L: hrel X} (is : iscomprelrel R L) (x x': X)
+ : quotrel is (setquotpr R x) (setquotpr R x') =  L x x'.
+Proof.
+  unfold quotrel.
+  rewrite setquotuniv2comm.  (** with apply some errors on universes *)
+  apply idpath.
+Defined.
+
 Lemma istransquotrel {X : UU} {R : eqrel X} {L : hrel X}
       (is : iscomprelrel R L) (isl : istrans L) : istrans (quotrel is).
 Proof.
@@ -2272,6 +2377,8 @@ Proof.
   }
   apply (setquotuniv3prop R (λ x1 x2 x3, make_hProp _ (int x1 x2 x3))).
   intros x x' x''. intros r r'.
+  rewrite quotrelcomm in r, r'.
+  rewrite quotrelcomm.
   apply (isl x x' x'' r r').
 Defined.
 
@@ -2288,13 +2395,18 @@ Proof.
   }
   apply (setquotuniv2prop R (λ x1 x2, make_hProp _ (int x1 x2))).
   intros x x'. intros r.
+  rewrite quotrelcomm in r.
+  rewrite quotrelcomm.
   apply (isl x x' r).
 Defined.
 
+(* 
 Lemma isreflquotrel {X : UU} {R : eqrel X} {L : hrel X} (is : iscomprelrel R L)
       (isl : isrefl L) : isrefl (quotrel is).
 Proof.
-  intros. unfold isrefl. apply (setquotunivprop R).
+  intros. unfold isrefl.
+  set (H := setquotunivprop R ).
+  apply H.
   intro x. apply (isl x).
 Defined.
 
@@ -3061,3 +3173,4 @@ Defined.
 Ltac hSet_induction f e := generalize f; apply UU_rect; intro e; clear f.
 
 (* End of the file hSet.v *)
+*)

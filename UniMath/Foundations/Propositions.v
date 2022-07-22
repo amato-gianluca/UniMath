@@ -167,27 +167,85 @@ Definition isdecEq (X : UU) : hProp := make_hProp _ (isapropisdeceq X).
 
 
 
-Definition ishinh_UU (X : UU) : UU := ∏ P : hProp, ((X -> P) -> P).
+Definition ishinh'_UU (X : UU) : UU := ∏ P : hProp, ((X -> P) -> P).
 
-Lemma isapropishinh (X : UU) : isaprop (ishinh_UU X).
+Lemma isapropishinh' (X : UU) : isaprop (ishinh'_UU X).
 Proof.
   apply impred.
   intro P. apply impred.
   intro. apply (pr2 P).
 Qed.
 
+Definition ishinh' (X : UU) : hProp := make_hProp (ishinh'_UU X) (isapropishinh' X).
+
+Axiom propresize : forall (A : UU) (H : isaprop A), Type.
+ 
+Axiom equiv_propresize : forall (A : Type) (H : isaprop A), weq (@propresize A H) A.
+
+Definition ishinh_UU (X : UU) : UU 
+  := propresize (ishinh'_UU X) (isapropishinh' X).
+
+Definition equiv_ishinh_UU (X: UU): weq (ishinh_UU X) (ishinh'_UU X).
+Proof.
+ unfold ishinh_UU.
+ apply (equiv_propresize (ishinh'_UU X) (isapropishinh' X)).
+Defined.
+
+Lemma isapropishinh (X : UU) : isaprop (ishinh_UU X).
+Proof.
+  apply (isofhlevelweqb _ (equiv_ishinh_UU X)).
+  apply isapropishinh'.
+Defined.
+
 Definition ishinh (X : UU) : hProp := make_hProp (ishinh_UU X) (isapropishinh X).
+
+Definition equiv_ishinh (X: UU): weq (ishinh X) (ishinh' X).
+Proof.
+  cbn.
+  apply equiv_ishinh_UU.
+Defined.
+
+Definition eqishinh (X: UU): (ishinh X) = (ishinh' X).
+Proof.
+  use total2_paths2_f.
+  - apply (weqtopathsUAH univalenceAxiom).
+    apply equiv_ishinh_UU.
+  - simpl.
+    apply isapropisaprop.
+Defined.
 
 Notation nonempty := ishinh (only parsing).
 
 Notation "∥ A ∥" := (ishinh A) (at level 20) : type_scope.
 (* written \|| in agda-input method *)
 
-Definition hinhpr {X : UU} : X -> ∥ X ∥
-  := λ x : X, λ P : hProp, fun f : X -> P => f x.
+Definition hinhpr {X : UU} : X -> ∥ X ∥.
+Proof.
+  intro x.
+  apply (invmap (equiv_ishinh X)).
+  exact (λ P : hProp, (fun f : X -> P => f x)).
+Defined.
 
-Definition hinhfun {X Y : UU} (f : X -> Y) : ∥ X ∥ -> ∥ Y ∥ :=
-  fun isx : ∥ X ∥ => λ P : _, fun yp : Y -> P => isx P (λ x : X, yp (f x)).
+Definition hinhfun {X Y : UU} (f : X -> Y) : ∥ X ∥ -> ∥ Y ∥.
+Proof.
+  intro isx.
+  apply (invmap (equiv_ishinh Y)).
+  apply equiv_ishinh in isx.
+  exact (λ P : _, fun yp : Y -> P => isx P (λ x : X, yp (f x))).
+Defined.
+
+(*
+Lemma hinhfunpr {X Y: UU} (weqxy: weq X Y) (x: X)
+  : hinhfun weqxy (hinhpr x) ~ hinhpr (weqxy x).
+Proof.
+  induction weqxy as [weq f_is_weq].
+  simpl.
+  unfold hinhfun.
+  intro P.
+  unfold hinhpr.
+  apply idpath.
+Defined.
+*)
 
 (** Note that the previous definitions do not require RR1 in an essential way
   (except for the placing of [ishinh] in [hProp UU] - without RR1 it would be
@@ -195,7 +253,18 @@ Definition hinhfun {X Y : UU} (f : X -> Y) : ∥ X ∥ -> ∥ Y ∥ :=
   in application of [hinhuniv] to a function [X -> ishinh Y] *)
 
 Definition hinhuniv {X : UU} {P : hProp} (f : X -> P) (wit : ∥ X ∥) : P
-  := wit P f.
+  := (equiv_ishinh X wit) P f.
+
+Lemma hinhunivpr {X : UU} (x: X) {P: hProp} (f: X → P)
+  : hinhuniv f (hinhpr x) = f x.
+Proof.
+  unfold hinhuniv.
+  unfold hinhpr.
+  unfold equiv_ishinh.
+  unfold equiv_ishinh_UU.
+  rewrite homotweqinvweq.
+  apply idpath.
+Defined.
 
 Corollary factor_through_squash {X Q : UU} : isaprop Q -> (X -> Q) -> ∥ X ∥ -> Q.
 Proof.
@@ -207,8 +276,12 @@ Proof.
   intros h i f. exact (@hinhuniv X (Q,,i) f h).
 Defined.
 
-Definition hinhand {X Y : UU} (inx1 : ∥ X ∥) (iny1 : ∥ Y ∥) : ∥ X × Y ∥
-  := λ P : _, ddualand (inx1 P) (iny1 P).
+Definition hinhand {X Y : UU} (inx1 : ∥ X ∥) (iny1 : ∥ Y ∥) : ∥ X × Y ∥.
+Proof.
+  apply equiv_ishinh in inx1, iny1.
+  apply (invmap (equiv_ishinh _)).
+  exact (λ P : _, ddualand (inx1 P) (iny1 P)).
+Defined.
 
 Definition hinhuniv2 {X Y : UU} {P : hProp} (f : X -> Y -> P)
            (isx : ∥ X ∥) (isy : ∥ Y ∥) : P
@@ -256,7 +329,11 @@ Defined.
 
 Lemma hinhcoprod (X Y : UU) : ∥ (∥ X ∥ ⨿ ∥ Y ∥) ∥ -> ∥ X ⨿ Y ∥.
 Proof.
-  intros is. unfold ishinh. intro P. intro CP.
+  intros is. 
+  apply equiv_ishinh in is.
+  apply (invmap (equiv_ishinh _)).
+  unfold ishinh.
+  intro P. intro CP.
   set (CPX := λ x : X, CP (ii1 x)).
   set (CPY := λ y : Y, CP (ii2 y)).
   set (is1P := is P).
@@ -316,8 +393,10 @@ Lemma issurjprtoimage {X Y : UU} (f : X -> Y) : issurjective (prtoimage f).
 Proof.
   intros. intro z.
   set (f' := prtoimage f).
-  assert (ff: hfiber (funcomp f' (pr1image f)) (pr1 z) -> hfiber f' z)
-    by refine (invweq (samehfibers _ _ (isinclpr1image f) z)).
+  assert (ff: hfiber (funcomp f' (pr1image f)) (pr1 z) -> hfiber f' z).
+  {
+     refine (invweq (samehfibers _ _ (isinclpr1image f) z)).
+  }
   apply (hinhfun ff).
   exact (pr2 z).
 Defined.
@@ -351,7 +430,7 @@ Proof.
   intros Hincl Hsurj.
   intro y.
   set (H := make_hProp (iscontr (hfiber f y)) (isapropiscontr _)).
-  apply (Hsurj y H).
+  apply ((equiv_ishinh _ (Hsurj y)) H).
   intro x.
   simpl.
   apply iscontraprop1.
@@ -650,7 +729,7 @@ Definition inhdnegand (X Y : UU) (inx0 : isinhdneg X) (iny0 : isinhdneg Y) :
   isinhdneg (X × Y) := dneganddnegimpldneg inx0 iny0.
 
 Definition hinhimplinhdneg (X : UU) (inx1 : ishinh X) : isinhdneg X
-  := inx1 hfalse.
+  := (equiv_ishinh _ inx1) hfalse.
 
 (** ** Univalence for hProp *)
 
@@ -704,13 +783,18 @@ Proof.
   }
 
   set (h := λ a1 : Z1, (pr1 (pr1 a1))).
-  assert (egf0 : ∏ a1 : Z1, paths (pr1 (g (f a1))) (pr1 a1))
-         by (intro; apply idpath).
+  assert (egf0 : ∏ a1 : Z1, paths (pr1 (g (f a1))) (pr1 a1)).
+  { 
+    intro; apply idpath.
+  }
   assert (egf1 : ∏ a1 a1' : Z1, paths (pr1 a1') (pr1 a1) -> a1' = a1).
   {
     intros ? ? X.
     set (X' := maponpaths (@pr1 _ _) X).
-    assert (is : isweq h) by apply (isweqpr1pr1 hProp).
+    assert (is : isweq h).
+    { 
+      apply (isweqpr1pr1 hProp).
+    }
     apply (invmaponpathsweq (make_weq h is) _ _ X').
   }
   set (egf := λ a1, (egf1 _ _ (egf0 a1))).
