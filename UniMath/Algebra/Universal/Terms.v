@@ -22,6 +22,46 @@ Local Open Scope hvec.
 Local Open Scope list.
 Local Open Scope transport.
 
+(** ** Non empty lists. *)
+
+Definition listne (A: UU): UU := ∑ n: nat, vec A (S n).
+
+Definition car {A: UU} (l: listne A): A := pr12 l.
+
+Definition cdr {A: UU} (l: listne A): list A := (pr1 l ,, pr22 l).
+
+Definition listne_list {A: UU} (l: listne A): list A := (S(pr1 l),, pr2 l).
+
+Coercion listne_list: listne >-> list.
+
+Definition consne {A: UU} (x: A) (l: list A): listne A := (length l,, vcons x (pr2 l)).
+
+Lemma listne_ind {A: UU}: ∏ (P : listne A -> UU),
+     (∏ (x: A), P (consne x nil))
+  -> (∏ (x : A) (xs : listne A), P xs -> P (consne x xs))
+  -> ∏ xs, P xs.
+Proof.
+intros P Hbase Hcons xs.
+induction xs as [n xs].
+induction n as [|n IHn].
+- induction xs.
+  induction pr2.
+  apply Hbase.
+- simpl in xs.
+  induction xs as [x xs].
+  apply (Hcons x (n,,xs) (IHn xs)).
+Defined.
+
+Definition concatenatene {X} : list X -> listne X -> listne X
+  := λ r s, foldr (λ v l, consne v (listne_list l)) s r.
+
+Lemma isofhlevellistne (n : nat) {X : UU} (is1 : isofhlevel (S (S n)) X) : isofhlevel (S (S n)) (listne X).
+Proof.
+  use isofhleveltotal2.
+  - intros m k. apply isofhlevelsnprop, isasetnat.
+  - intro m. apply isofhlevelvec, is1.
+Defined.
+
 (** ** Definition of [oplist] (operations list). *)
 (**
 An [oplist] is a list of operation symbols, interpreted as commands to be executed by a stack
@@ -33,15 +73,15 @@ a stack of length one, when execution starts from the empty stack. Operation sym
 order from the last element of the [oplist] to the first.
 *)
 
-Local Definition oplist (σ: signature):= list (names σ).
+Local Definition oplist (σ: signature):= listne (names σ).
 
 Bind Scope list_scope with oplist.
 
-Identity Coercion oplistislist: oplist >-> list.
+Identity Coercion oplistislist: oplist >-> listne.
 
 Local Corollary isasetoplist (σ: signature): isaset (oplist σ).
 Proof.
-  apply isofhlevellist.
+  apply isofhlevellistne.
   apply setproperty.
 Defined.
 
@@ -145,18 +185,21 @@ Section Oplists.
     - apply negpathsii2ii1.
   Defined.
 
+(*
   Local Lemma oplistexec_nil
     : oplistexec (nil: oplist σ) = just nil.
   Proof.
     apply idpath.
   Defined.
+*)
 
   Local Lemma oplistexec_cons (nm: names σ) (l: oplist σ)
-    : oplistexec (nm :: l) = opexec nm (oplistexec l).
+    : oplistexec (consne nm l) = opexec nm (oplistexec l).
   Proof.
     apply idpath.
   Defined.
 
+(*
   Local Lemma oplistexec_zero_b (l: oplist σ): oplistexec l = just nil → l = nil.
   Proof.
     revert l.
@@ -166,13 +209,18 @@ Section Oplists.
       apply opexec_zero_b in lstack.
       contradiction.
   Defined.
+*)
 
+(*
   Local Lemma oplistexec_positive_b (l: oplist σ) (s: sorts σ) (ss: list (sorts σ))
-    : oplistexec l = just (s :: ss) → ∑ (x: names σ) (xs: oplist σ), l = x :: xs.
+    : oplistexec l = just (s :: ss) → ∑ (x: names σ) (xs: oplist σ), l = consne x xs.
   Proof.
     revert l.
-    refine (list_ind _ _ _).
-    - intro nilstack.
+    refine (listne_ind _ _ _).
+    - intro x.
+
+
+    nilstack.
       cbn in nilstack.
       apply ii1_injectivity in nilstack.
       apply negpathsnilcons in nilstack.
@@ -182,6 +230,7 @@ Section Oplists.
       exists xs.
       apply idpath.
   Defined.
+*)
 
   (** *** The [stackconcatenate] function. *)
 
@@ -218,15 +267,15 @@ Section Oplists.
 
  Local Lemma oplistexec_concatenate (l1 l2: oplist σ)
     : oplistexec l1 != nothing
-      → oplistexec (concatenate l1 l2)
+      → oplistexec (concatenatene l1 l2)
         = stackconcatenate (oplistexec l1) (oplistexec l2).
   Proof.
     revert l1.
-    refine (list_ind _ _ _).
+    refine (listne_ind _ _ _).
     - intros.
       change ([] ++ l2) with (l2).
       induction (oplistexec l2) as [l2ok | l2error].
-      + apply idpath.
+      + simpl. apply idpath.
       + induction l2error.
         apply idpath.
     - intros x xs IHxs noerror.
