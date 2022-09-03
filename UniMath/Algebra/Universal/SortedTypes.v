@@ -50,21 +50,6 @@ Proof.
   apply iscontrfuntounit.
 Defined.
 
-(** An element of [shSet S] is an [S]-sorted set, i.e., an [S]-indexed family of sets. It can be
-immediately coerced to an [S]-sorted type. *)
-
-Definition shSet (S: UU): UU := S → hSet.
-
-Definition sunitset (S: UU): shSet S := λ _, unitset.
-
-Lemma isaset_set_sfun_space {S: UU} {X: sUU S} {Y: shSet S}: isaset (X s→ Y).
-Proof.
-  change (isaset (X s→ Y)).
-  apply impred_isaset.
-  intros.
-  apply isaset_forall_hSet.
-Defined.
-
 (** If [X: sUU S], then [star X] is the lifting of [X] to the index type [list S], given
 by [star X] [s1; s2; ...; sn] = [X s1 ; X s2 ; ... ; X sn]. *)
 
