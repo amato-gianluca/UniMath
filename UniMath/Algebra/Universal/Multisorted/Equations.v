@@ -6,7 +6,7 @@ This file contains a formalization of equations and equation systems over a sign
 
 Require Import UniMath.MoreFoundations.Notations.
 
-Require Export UniMath.Algebra.Universal.VTerms.
+Require Export UniMath.Algebra.Universal.Multisorted.VTerms.
 
 (** ** Equations.
 An equation is a pair of terms (with variables) of the same sort

@@ -3,8 +3,8 @@
 
 Require Import UniMath.Foundations.All.
 
-Require Export UniMath.Algebra.Universal.SortedTypes.
-Require Export UniMath.Algebra.Universal.Signatures.
+Require Export UniMath.Algebra.Universal.Multisorted.SortedTypes.
+Require Export UniMath.Algebra.Universal.Multisorted.Signatures.
 
 Local Open Scope sorted.
 

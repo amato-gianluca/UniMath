@@ -14,8 +14,8 @@ Require Import UniMath.MoreFoundations.Notations.
 Require Import UniMath.MoreFoundations.PartA.
 
 Require Import UniMath.Combinatorics.Maybe.
-Require Import UniMath.Algebra.Universal.SortedTypes.
-Require Export UniMath.Algebra.Universal.Signatures.
+Require Import UniMath.Algebra.Universal.Multisorted.SortedTypes.
+Require Export UniMath.Algebra.Universal.Multisorted.Signatures.
 
 Local Open Scope sorted.
 Local Open Scope hvec.
@@ -914,7 +914,7 @@ End TermInduction.
 (** ** Notations for ground terms. *)
 (**
 Since [term], [termset], [fromterm] and [fromtermstep]  will be redefined in
-[UniMath.Algebra.Universal.VTerms] in their more general form with variables, we introduce
+[UniMath.Algebra.Universal.Multisorted.VTerms] in their more general form with variables, we introduce
 here notations [gterm], [make_gterm] and similar to make the ground version publically
 available with special names.
 *)

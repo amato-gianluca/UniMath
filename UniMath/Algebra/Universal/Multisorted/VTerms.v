@@ -10,8 +10,8 @@ extended signature.
 
 Require Import UniMath.Foundations.All.
 
-Require Import UniMath.Algebra.Universal.SortedTypes.
-Require Export UniMath.Algebra.Universal.Terms.
+Require Import UniMath.Algebra.Universal.Multisorted.SortedTypes.
+Require Export UniMath.Algebra.Universal.Multisorted.Terms.
 
 Local Open Scope sorted.
 

@@ -3,8 +3,8 @@
 
 Require Import UniMath.Foundations.All.
 
-Require Export UniMath.Algebra.Universal.Algebras.
-Require Export UniMath.Algebra.Universal.Terms.
+Require Export UniMath.Algebra.Universal.Multisorted.Algebras.
+Require Export UniMath.Algebra.Universal.Multisorted.Terms.
 
 Local Open Scope sorted.
 Local Open Scope hom.

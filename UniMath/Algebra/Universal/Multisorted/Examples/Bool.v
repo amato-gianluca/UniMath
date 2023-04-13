@@ -9,8 +9,8 @@ Require Import UniMath.MoreFoundations.Bool.
 Require Import UniMath.Combinatorics.StandardFiniteSets.
 Require Import UniMath.Combinatorics.MoreLists.
 
-Require Import UniMath.Algebra.Universal.Algebras.
-Require Import UniMath.Algebra.Universal.VTerms.
+Require Import UniMath.Algebra.Universal.Multisorted.Algebras.
+Require Import UniMath.Algebra.Universal.Multisorted.VTerms.
 
 Local Open Scope stn.
 
@@ -18,7 +18,7 @@ Definition bool_signature := make_signature_simple_single_sorted [0; 0; 1; 2; 2;
 
 (** ** Algebra structure over type bool. *)
 
-Definition bool_algebra := make_algebra_simple_single_sorted' 
+Definition bool_algebra := make_algebra_simple_single_sorted'
   bool_signature
   boolset
   [( false ; true ; negb ; andb ; orb ; implb )].

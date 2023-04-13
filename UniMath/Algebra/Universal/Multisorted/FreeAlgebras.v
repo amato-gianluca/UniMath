@@ -7,8 +7,8 @@ of terms over a signature and a set of variables.
 
 Require Import UniMath.Foundations.All.
 
-Require Export UniMath.Algebra.Universal.Algebras.
-Require Export UniMath.Algebra.Universal.VTerms.
+Require Export UniMath.Algebra.Universal.Multisorted.Algebras.
+Require Export UniMath.Algebra.Universal.Multisorted.VTerms.
 
 Local Open Scope sorted.
 Local Open Scope hom.

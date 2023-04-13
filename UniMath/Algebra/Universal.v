@@ -1,3 +1,3 @@
 (** * Universal algebra: signatures, algebras and terms *)
 
-Require Export UniMath.Algebra.Universal.FreeAlgebras.
+Require Export UniMath.Algebra.Universal.Multisorted.FreeAlgebras.

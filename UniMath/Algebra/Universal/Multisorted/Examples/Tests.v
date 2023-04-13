@@ -5,9 +5,9 @@ Require Import UniMath.Foundations.All.
 Require Import UniMath.Combinatorics.StandardFiniteSets.
 
 Require Import UniMath.Combinatorics.MoreLists.
-Require Import UniMath.Algebra.Universal.TermAlgebras.
-Require Import UniMath.Algebra.Universal.Examples.Nat.
-Require Import UniMath.Algebra.Universal.Examples.Bool.
+Require Import UniMath.Algebra.Universal.Multisorted.TermAlgebras.
+Require Import UniMath.Algebra.Universal.Multisorted.Examples.Nat.
+Require Import UniMath.Algebra.Universal.Multisorted.Examples.Bool.
 
 Local Open Scope stn.
 Local Open Scope sorted.
@@ -164,7 +164,7 @@ Section NatHom.
 End NatHom.
 
 Section Bool.
-  Import UniMath.Algebra.Universal.Examples.Bool.GTerm.
+  Import UniMath.Algebra.Universal.Multisorted.Examples.Bool.GTerm.
   Local Open Scope stn.
 
   Local Definition bot_op  : names bool_signature := ●0.

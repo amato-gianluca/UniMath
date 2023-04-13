@@ -7,8 +7,8 @@ models of an equation system.
 
 Require Import UniMath.MoreFoundations.Notations.
 
-Require Export UniMath.Algebra.Universal.Algebras.
-Require Export UniMath.Algebra.Universal.Equations.
+Require Export UniMath.Algebra.Universal.Multisorted.Algebras.
+Require Export UniMath.Algebra.Universal.Multisorted.Equations.
 
 Section Varieties.
 

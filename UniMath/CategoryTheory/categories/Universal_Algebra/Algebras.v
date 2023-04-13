@@ -18,7 +18,7 @@ Require Import UniMath.CategoryTheory.DisplayedCats.Isos.
 Require Import UniMath.CategoryTheory.DisplayedCats.Univalence.
 Require Import UniMath.CategoryTheory.limits.initial.
 
-Require Import UniMath.Algebra.Universal.TermAlgebras.
+Require Import UniMath.Algebra.Universal.Multisorted.TermAlgebras.
 
 Section Algebras.
 

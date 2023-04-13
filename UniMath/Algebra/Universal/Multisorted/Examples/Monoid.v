@@ -9,7 +9,7 @@ Require Import UniMath.MoreFoundations.Notations.
 Require Import UniMath.Combinatorics.StandardFiniteSets.
 Require Import UniMath.Algebra.Monoids.
 
-Require Import UniMath.Algebra.Universal.EqAlgebras.
+Require Import UniMath.Algebra.Universal.Multisorted.EqAlgebras.
 
 Local Open Scope stn.
 Local Open Scope eq.
