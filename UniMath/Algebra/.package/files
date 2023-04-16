@@ -36,6 +36,14 @@ Universal/Multisorted/Examples/Monoid.v
 Universal/Multisorted/Examples/Group.v
 Universal/Multisorted/Examples/ListDataType.v
 Universal/Multisorted/Examples/Tests.v
+Universal/Singlesorted/Signatures.v
+Universal/Singlesorted/Algebras.v
+Universal/Singlesorted/Terms.v
+Universal/Singlesorted/TermAlgebras.v
+Universal/Singlesorted/VTerms.v
+Universal/Singlesorted/Examples/Nat.v
+Universal/Singlesorted/Examples/Bool.v
+Universal/Singlesorted/Examples/Tests.v
 Universal.v
 GaussianElimination/Auxiliary.v
 GaussianElimination/Vectors.v

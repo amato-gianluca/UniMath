@@ -341,3 +341,47 @@ Proof.
     induction v2 as [x2 xs2].
     exact ((x1 ,, x2) ::: IHn xs1 xs2).
 Defined.
+
+(** ** Functions from hvecs and their curried variants. *)
+
+(**
+  If [A] and [B] are types and [n] is a natural number, [iterfun n A B] is the curried version of [vec A n → B], i.e.
+  [iterfun n A B] =  [A → A → ...... → A → B)] where [A] is repeated [n] times.
+*)
+
+Definition iterfun (n: nat) (A: UU)  (B: UU): UU.
+Proof.
+  induction n.
+  - exact B.
+  - exact (A → IHn).
+Defined.
+
+(**
+   If  [f: vec A n → B], then [currify f] is the curried version of [f], which has type
+   [iterfun v B].
+*)
+
+Definition currify {n: nat} {A B: UU} (f: vec A n → B): iterfun n A B.
+Proof.
+  induction n.
+  - intros.
+    exact (f tt).
+  - simpl in f.
+    simpl.
+    intro a.
+    exact (IHn (λ l, f (a,, l))).
+Defined.
+
+(**
+   [uncurrify] is the inverse transformation of [currify].
+*)
+
+Definition uncurrify {n: nat} {A B: UU} (f: iterfun n A B): vec A n → B.
+Proof.
+  induction n.
+  - intros.
+    exact f.
+  - simpl in *.
+    intro a.
+    exact (IHn (f (pr1 a)) (pr2 a)).
+Defined.
