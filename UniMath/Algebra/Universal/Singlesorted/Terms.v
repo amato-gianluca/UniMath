@@ -194,11 +194,7 @@ Defined.
       apply idpath.
   Defined.
 
-  (** *** The [stackconcatenate] function. *)
-
-  (**
-  [stackconcatenate] simply sum two stacks, possibly propagating  erroneous states.
-  *)
+  (** *** Lemmas on natural numbers. *)
 
   Local Lemma natlehsntolrhn (a b: nat): S b ≤ a → b ≤ a.
   Proof.
@@ -237,6 +233,12 @@ Defined.
       + assumption.
   Defined.
 
+  (** *** The [stackconcatenate] function. *)
+
+  (**
+  [stackconcatenate] simply sum two stacks, possibly propagating  erroneous states.
+  *)
+
   Local Definition stackconcatenate (st1 st2: stackstatus): stackstatus
     := flatmap (λ st2', flatmap (λ st1', just (st1' + st2')) st1) st2.
 
@@ -265,7 +267,6 @@ Defined.
         * exact arityok1.
         * apply natlehnplusnm.
   Defined.
-
 
   Local Lemma oplistexec_concatenate (l1 l2: oplist σ)
   : oplistexec l1 != nothing
