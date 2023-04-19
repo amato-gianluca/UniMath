@@ -19,7 +19,7 @@ Require Import UniMath.Combinatorics.Maybe.
 Require Import UniMath.Combinatorics.Vectors.
 Require Import UniMath.Combinatorics.Lists.
 Require Import UniMath.Combinatorics.MoreLists.
-Require Export UniMath.Algebra.Universal.Multisorted.HVectors.
+Require Export UniMath.Algebra.Universal.HVectors.
 Require Export UniMath.Algebra.Universal.Singlesorted.Signatures.
 
 Local Open Scope list.
@@ -115,7 +115,6 @@ Section Oplists.
     - exact (pr1 execdecok).
   Defined.
 
-
   Local Lemma opexec_just_b (nm: names σ) (st: stackstatus) (sl': nat)
    : opexec nm st = just sl' → st = just (sl' - 1 + arity nm).
   Proof.
@@ -139,35 +138,6 @@ Section Oplists.
       apply negpathsii2ii1 in execok.
       contradiction.
   Defined.
-
-
-  (*
-  Local Lemma opexec_just_b (nm: names σ) (st: stackstatus) (sl': nat)
-   : opexec nm st = just sl' → st = just ((arity nm) + sl' - 1).
-  Proof.
-    intro execok.
-    induction st as [sl | serror].
-    - induction (opexec_dec nm sl) as [execdecerr | execdecok].
-      + induction execdecerr as [execerr _].
-        set (C := ! execok @ execerr).
-        contradiction (negpathsii1ii2 _ _ C).
-      + induction execdecok as [execok1 arityok].
-        set (H := ! execok @ execok1).
-        apply ii1_injectivity in H.
-        apply maponpaths.
-        rewrite H.
-        change (sl = arity nm + (1 + (sl - arity nm)) - 1).
-        rewrite (natpluscomm 1 (sl - arity nm)).
-        rewrite <- natplusassoc.
-        rewrite plusminusnmm.
-        rewrite (natplusminusle arityok).
-        rewrite natpluscomm.
-        rewrite plusminusnmm.
-        apply idpath.
-    - simpl in execok.
-      apply negpathsii2ii1 in execok.
-      contradiction.
-  Defined.*)
 
   Local Lemma opexec_zero_b (nm: names σ) (st: stackstatus)
     : ¬ (opexec nm st = just 0).
@@ -828,53 +798,8 @@ Section TermInduction.
      : paths_rect A a P x a (idpath a) = x.
   Proof. apply idpath. Defined.
 
-  Definition hmap {A: UU} {n: nat} {R: A → UU} (f: ∏ a: A, R a) (v: vec A n): hvec (vec_map R v).
-  Proof.
-    revert n v.
-    refine (vec_ind _ _ _).
-    - exact hnil.
-    - intros x n xs IHxs.
-      simpl.
-      exact (hcons (f x) IHxs).
-  Defined.
-
-  Definition hlift {A: UU} {n: nat}  (v: vec A n): hvec (vec_map (λ _, A) v).
-  Proof.
-    revert n v.
-    refine (vec_ind _ _ _).
-    - exact hnil.
-    - intros x n xs IHxs.
-      exact (hcons x IHxs).
-  Defined.
-
-  Lemma h1map_hlift_as_h1map {A: UU} {n: nat} (h1v: vec A n)
-    {Q: ∏ (a: A), UU} (h2v: hvec (vec_map Q h1v))
-    {R: ∏ (a: A), UU} (f: ∏ (a: A), R a )
-    : h1map (λ a  _, f a ) (hlift h1v) = h1map (λ a  _, f a ) h2v.
-  Proof.
-    revert n h1v h2v.
-    refine (vec_ind _ _ _).
-    - reflexivity.
-    - simpl.
-      intros x n xs IHxs h2v.
-      apply maponpaths.
-      exact (IHxs (pr2 h2v)).
-  Defined.
-
-  Lemma h1lower_h1map_hlift {A B: UU} {n: nat} (f: A → B) (h1v: vec A n)
-  : h1lower (h1map (λ a  _, f a ) (hlift h1v)) = vec_map f h1v.
-  Proof.
-    revert n h1v.
-    refine (vec_ind _ _ _).
-    - reflexivity.
-    - intros x n xs IHxs.
-      simpl.
-      apply maponpaths.
-      exact IHxs.
-  Defined.
-
   Lemma term_ind_step (P: term σ  → UU) (R: term_ind_HP P) (nm: names σ) (v: vec (term σ) (arity nm))
-    : term_ind P R (build_term nm v) = R nm v (h1map (λ t _, term_ind P R t) (hlift v)).
+    : term_ind P R (build_term nm v) = R nm v (h1map (λ t _, term_ind P R t) (h1lift v)).
   Proof.
     unfold term_ind.
     set (t := build_term nm v) in *.
@@ -895,7 +820,7 @@ Section TermInduction.
     induction (! v0normisid).
     rewrite idpath_transportf.
     apply maponpaths.
-    rewrite (h1map_hlift_as_h1map v v0len).
+    rewrite (h1map_h1lift v v0len).
     apply (maponpaths (λ x, h1map x _)).
     repeat (apply funextsec; intro).
     apply (term_ind_onlength_nirrelevant P R  (pr1 (vecoplist2oplist (vec_map term2oplist v)))).
@@ -927,7 +852,7 @@ Section TermInduction.
   Proof.
     unfold fromterm.
     rewrite term_ind_step.
-    rewrite h1lower_h1map_hlift.
+    rewrite h1lower_h1map_h1lift.
     apply idpath.
   Defined.
 

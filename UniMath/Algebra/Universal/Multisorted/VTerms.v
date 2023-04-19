@@ -68,7 +68,7 @@ Section VTerms.
     unfold fromterm, fromgterm, build_term.
     rewrite (term_ind_step _ _  (namelift V nm)).
     simpl.
-    rewrite h2lower_h1map_h1lift.
+    rewrite h2lower_h2map_h2lift.
     apply idpath.
   Defined.
 

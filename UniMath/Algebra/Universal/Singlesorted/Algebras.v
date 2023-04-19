@@ -5,7 +5,7 @@ Require Import UniMath.Foundations.All.
 Require Import UniMath.Combinatorics.Vectors.
 Require Import UniMath.Combinatorics.Lists.
 
-Require Export UniMath.Algebra.Universal.Multisorted.HVectors.
+Require Export UniMath.Algebra.Universal.HVectors.
 Require Export UniMath.Algebra.Universal.Singlesorted.Signatures.
 
 (** ** Basic definitions. *)

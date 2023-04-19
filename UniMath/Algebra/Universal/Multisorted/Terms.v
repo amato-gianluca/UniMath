@@ -828,7 +828,7 @@ Section TermInduction.
   Proof. apply idpath. Defined.
 
   Lemma term_ind_step (P: ∏ (s: sorts σ), term σ s → UU) (R: term_ind_HP P) (nm: names σ) (v: (term σ)⋆ (arity nm))
-    : term_ind P R (build_term nm v) = R nm v (h2map (λ s t q, term_ind P R t) (h1lift v)).
+    : term_ind P R (build_term nm v) = R nm v (h2map (λ s t q, term_ind P R t) (h2lift v)).
   Proof.
     unfold term_ind.
     set (princop_sorteq_idpath := princop_sorteq_buildterm nm v).
@@ -852,7 +852,7 @@ Section TermInduction.
     rewrite idpath_transportf.
     rewrite paths_rect_step.
     apply maponpaths.
-    rewrite (h1map_h1lift_as_h2map v v0len).
+    rewrite (h2map_h2lift v v0len).
     apply (maponpaths (λ x, h2map x _)).
     repeat (apply funextsec; intro).
     apply (term_ind_onlength_nirrelevant P R  (pr1 (vecoplist2oplist (h1map_vec (λ x2 : sorts σ, term2oplist) v)))).
@@ -884,7 +884,7 @@ Section TermInduction.
   Proof.
     unfold fromterm.
     rewrite term_ind_step.
-    rewrite h2lower_h1map_h1lift.
+    rewrite h2lower_h2map_h2lift.
     apply idpath.
   Defined.
 

@@ -87,7 +87,7 @@ Proof.
 Defined.
 
 Lemma hvec_vec_fill {A: UU} {n: nat}
-  : hvec (vec_fill A n)  = vec A n.
+  : hvec (vec_fill A n) = vec A n.
 Proof.
   induction n.
   - apply idpath.
@@ -129,6 +129,19 @@ Proof.
   - apply idfun.
   - intros x n xs IHxs h1v.
     exact (vcons (hhd h1v) (IHxs (htl h1v))).
+Defined.
+
+(** [h1lift] transforms a [vec A] into an [hvec (vec_map P v)] with constant map. Although
+it would be possibile to define [h1lift] starting from [h1const_is_vec], this would make difficult
+to work by induction over [v]. *)
+
+Definition h1lift {A: UU} {n: nat}  (v: vec A n): hvec (vec_map (λ _, A) v).
+Proof.
+  revert n v.
+  refine (vec_ind _ _ _).
+  - exact hnil.
+  - intros x n xs IHxs.
+    exact (hcons x IHxs).
 Defined.
 
 (** [h1foldr] is the analogous of [foldr] for level-1 hvecs. *)
@@ -195,6 +208,35 @@ Proof.
     apply (IHxs (pr2 h1v)).
 Defined.
 
+(** [h1lower_h1map_h1lift] and [h1map_h1lift] are two normalization lemmas relating level-1 and
+ordinary vector. *)
+
+Lemma h1lower_h1map_h1lift {A B: UU} {n: nat} (f: A → B) (v: vec A n)
+: h1lower (h1map (λ a  _, f a ) (h1lift v)) = vec_map f v.
+Proof.
+  revert n v.
+  refine (vec_ind _ _ _).
+  - reflexivity.
+  - intros x n xs IHxs.
+    simpl.
+    apply maponpaths.
+    exact IHxs.
+Defined.
+
+Lemma h1map_h1lift {A: UU} {n: nat} (v: vec A n)
+{Q: ∏ (a: A), UU} (h1v: hvec (vec_map Q v))
+{R: ∏ (a: A), UU} (f: ∏ (a: A), R a )
+: h1map (λ a  _, f a ) (h1lift v) = h1map (λ a  _, f a ) h1v.
+Proof.
+revert n v h1v.
+refine (vec_ind _ _ _).
+- reflexivity.
+- simpl.
+  intros x n xs IHxs h1v.
+  apply maponpaths.
+  exact (IHxs (pr2 h1v)).
+Defined.
+
 (** [h1map_vec] is just the composition of [h1map] and [h1lower], but it deserves a name
 since it is used in the definition of level-2 hvecs (see later). *)
 
@@ -228,9 +270,9 @@ Proof.
     exact (f x (pr1 h1v) (pr1 h2v) ::: IHv f (pr2 h1v) (pr2 h2v)).
 Defined.
 
-(** [h1lift] transforms a level-1 hvec into a level-2 hvec. *)
+(** [h2lift] transforms a level-1 hvec into a level-2 hvec. *)
 
-Definition h1lift {A: UU} {n: nat} {v: vec A n} {P: A → UU} (h1v: hvec (vec_map P v))
+Definition h2lift {A: UU} {n: nat} {v: vec A n} {P: A → UU} (h1v: hvec (vec_map P v))
   : hvec (h1map_vec (λ a _, P a) h1v).
 Proof.
   revert n v h1v.
@@ -258,12 +300,12 @@ Proof.
     + exact (IHxs (pr2 h1v) (pr2 h2v)).
 Defined.
 
-(** [h2lower_h1map_h1lift] and [h1map_h1lift_as_h2map] are two normalization lemmas relating level-1 and
+(** [h2lower_h2map_h2lift] and [h2map_h2lift] are two normalization lemmas relating level-1 and
 level-2 hvecs. *)
 
-Lemma h2lower_h1map_h1lift {A: UU} {n: nat} {v: vec A n}  {P: A → UU}
+Lemma h2lower_h2map_h2lift {A: UU} {n: nat} {v: vec A n}  {P: A → UU}
                        {Q: ∏ (a: A), UU} (f: ∏ (a: A), P a → Q a) (h1v: hvec (vec_map P v))
-  : h2lower (h2map (λ a p _, f a p) (h1lift h1v)) = h1map f h1v.
+  : h2lower (h2map (λ a p _, f a p) (h2lift h1v)) = h1map f h1v.
 Proof.
   revert n v h1v.
   refine (vec_ind _ _ _).
@@ -274,10 +316,10 @@ Proof.
     exact (IHxs (pr2 h1v)).
 Defined.
 
-Lemma h1map_h1lift_as_h2map {A: UU} {n: nat} {v: vec A n} {P: A → UU} (h1v: hvec (vec_map P v))
+Lemma h2map_h2lift {A: UU} {n: nat} {v: vec A n} {P: A → UU} (h1v: hvec (vec_map P v))
              {Q: ∏ (a: A) (p: P a), UU} (h2v: hvec (h1map_vec Q h1v))
              {R: ∏ (a: A) (p: P a), UU} (f: ∏ (a: A) (p: P a), R a p)
-  : h2map (λ a p _, f a p) (h1lift h1v) = h2map (λ a p _, f a p) h2v.
+  : h2map (λ a p _, f a p) (h2lift h1v) = h2map (λ a p _, f a p) h2v.
 Proof.
   revert n v h1v h2v.
   refine (vec_ind _ _ _).
