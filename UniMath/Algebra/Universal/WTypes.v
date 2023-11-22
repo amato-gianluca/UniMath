@@ -181,7 +181,7 @@ Definition functoralgebra_to_algebra (FAlg: algebra_ob F)
 Proof.
   induction FAlg as [carrier ops].
   simpl in ops.
-  exists (λ _, carrier). (*questa non è judgmentally la sola mappa unit→UU, infatti dopo definisce eta_unit' e deve usare function extensionality (comunque è comoda per sfruttare h1const_to_vec)*)
+  exists (λ _, carrier). (*questa fa fare una gran fatica in funcalg_alg_funcalg e richiede di provare i lemmi li usati, si può fare in altri modi?*)
   intro nm.
   intro subterms.
   apply h1const_to_vec in subterms.
