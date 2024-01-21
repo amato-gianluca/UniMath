@@ -329,13 +329,13 @@ Section groundTermAlgebraWtype.
     apply idpath.
   Defined.
 
-  Definition gtweq_sectoU (x:A) 
+  Definition gtweq_sectoU (x:A)
     : ((gterm σ)⋆ (arity x) → U) ≃ ((B x → U) → U)
     := invweq (weqbfun U (gtweq_sec x)).
 
   Definition gtweqtoU
     : (∏ x : A, (gterm σ)⋆ (arity x) → U) ≃ (∏ x : A, (B x → U) → U)
-    := (weqonsecfibers _ _ gtweq_sectoU). 
+    := (weqonsecfibers _ _ gtweq_sectoU).
 
   Definition sup: ∏ x : A, (B x → U) → U.
   Proof.
@@ -355,12 +355,12 @@ Section groundTermAlgebraWtype.
       use (weqsecoverunit (λ s, gterm σ s → UU)).
     Defined.
 
-    Context 
+    Context
         (P:(∏ (s: sorts σ), gterm σ s → UU)).
       Let lowP := lower_predicate P.
 
     Section ind_HP.
-      
+
       Context
         (nm:names σ)
         (v : (gterm σ)⋆ (arity nm)).
@@ -384,7 +384,7 @@ Section groundTermAlgebraWtype.
         use eqweqmap.
         use maponpaths.
         unfold sup.
-        unfold gtweqtoU. 
+        unfold gtweqtoU.
 
         change (build_gterm nm v = transportf (λ _ : B nm → U, U) (homotweqinvweq (gtweq_sec nm) f) (build_gterm nm (invmap (gtweq_sec nm) f))).
         (*
@@ -404,7 +404,7 @@ Section groundTermAlgebraWtype.
         use pathsinv0.
         use homotinvweqweq0.
       Defined.
-      
+
     End ind_HP.
 
     Theorem HP_weq : term_ind_HP P ≃ ind_HP (lowP).
@@ -456,7 +456,7 @@ Section groundTermAlgebraWtype.
     Defined.
 
   Section beta_simplecase.
-    Context 
+    Context
       (P:(∏ (s: sorts σ), gterm σ s → UU))
       (nm: names σ)
       (v : (gterm σ)⋆ (arity nm))
@@ -472,7 +472,7 @@ Section groundTermAlgebraWtype.
         rewrite invind.
         unfold ind_weq.
         simpl.
-        
+
         rewrite inv_weqonsec.
         rewrite inv_weqonsec.
 
@@ -480,7 +480,7 @@ Section groundTermAlgebraWtype.
         apply idpath.
       Defined.
 
-      Theorem ind_HP_Th_termInd 
+      Theorem ind_HP_Th_termInd
       : ind_HP_Th P nm v (term_ind P R (build_gterm nm v)) = term_ind P R (sup nm (gtweq_sec nm v)).
       Proof.
         use eqweqmap_ap.
@@ -540,7 +540,7 @@ Section groundTermAlgebraWtype.
   End beta_simplecase.
 
   Section beta.
-    Context 
+    Context
       (P:U → UU)
       (x: names σ)
       (f : B x → U)

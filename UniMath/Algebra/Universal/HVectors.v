@@ -59,7 +59,7 @@ Proof.
     apply HI, IHn.
 Defined.
 
-(*two variations on hvec_ind, with weaker hypothesis*) 
+(*two variations on hvec_ind, with weaker hypothesis*)
 
 Definition hvec_ind_fixedv {v:∏ n:nat, vec UU n} (P : ∏ n , hvec (v n) → UU) :
   (∏ hv0 , P 0 hv0)
@@ -88,7 +88,7 @@ Proof.
     * apply natlthnsn.
     * apply IHn.
       intros X x m w hw Hm HIm.
-      apply HI. 
+      apply HI.
       + apply (istransnatlth _ n).
         ++ exact Hm.
         ++ apply natlthnsn.
@@ -145,7 +145,7 @@ Proof.
     induction j as [|k _].
     + (*This subgoal seems easy enough to not require a proof so cumbersome...
       can we do better without make the goal family explicit?*)
-      use (stn_predicate (λ z , hel (make_hvec f) z = f z) 0 _ jlt). 
+      use (stn_predicate (λ z , hel (make_hvec f) z = f z) 0 _ jlt).
       { reflexivity. }
       apply idpath.
     + use meq.
@@ -388,7 +388,7 @@ Defined.
 Section hel_h1map_vec_vec_fill.
 (*This is just [[hel_h1map_vec]] for the special case in which
   [[v]] is of the form [[(vec_fill a n)]].
-  
+
   In this case we can have [[a]] judgemntally in the right hand side*)
 
 Context {A: UU} {n: nat} {a:A} {P: A → UU} {B: UU} (f: ∏ (x: A), P x → B)
