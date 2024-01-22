@@ -314,34 +314,34 @@ Section groundTermAlgebraWtype.
 
   Section sup.
 
-  Definition gtweq_sec (x:A) : (gterm σ)⋆ (arity x) ≃ (B x → U).
-  Proof.
-    unfold star.
-    use (weqcomp helf_weq).
-    use weqonsecfibers.
-    intro i.
-    use eqweqmap.
-    use el_vec_map_vec_fill.
-  Defined.
+    Definition gtweq_sec (x:A) : (gterm σ)⋆ (arity x) ≃ (B x → U).
+    Proof.
+      unfold star.
+      use (weqcomp helf_weq).
+      use weqonsecfibers.
+      intro i.
+      use eqweqmap.
+      use el_vec_map_vec_fill.
+    Defined.
 
-  Definition gtweq_sec_comp {x:A} (v:(gterm σ)⋆ (arity x)) (i : B x) : gtweq_sec x v i = eqweqmap (el_vec_map_vec_fill (gterm σ) tt i) (hel v i).
-  Proof.
-    apply idpath.
-  Defined.
+    Definition gtweq_sec_comp {x:A} (v:(gterm σ)⋆ (arity x)) (i : B x) : gtweq_sec x v i = eqweqmap (el_vec_map_vec_fill (gterm σ) tt i) (hel v i).
+    Proof.
+      apply idpath.
+    Defined.
 
-  Definition gtweq_sectoU (x:A)
-    : ((gterm σ)⋆ (arity x) → U) ≃ ((B x → U) → U)
-    := invweq (weqbfun U (gtweq_sec x)).
+    Definition gtweq_sectoU (x:A)
+      : ((gterm σ)⋆ (arity x) → U) ≃ ((B x → U) → U)
+      := invweq (weqbfun U (gtweq_sec x)).
 
-  Definition gtweqtoU
-    : (∏ x : A, (gterm σ)⋆ (arity x) → U) ≃ (∏ x : A, (B x → U) → U)
-    := (weqonsecfibers _ _ gtweq_sectoU).
+    Definition gtweqtoU
+      : (∏ x : A, (gterm σ)⋆ (arity x) → U) ≃ (∏ x : A, (B x → U) → U)
+      := (weqonsecfibers _ _ gtweq_sectoU).
 
-  Definition sup: ∏ x : A, (B x → U) → U.
-  Proof.
-    use (gtweqtoU).
-    use build_gterm.
-  Defined.
+    Definition sup: ∏ x : A, (B x → U) → U.
+    Proof.
+      use (gtweqtoU).
+      use build_gterm.
+    Defined.
 
   End sup.
 
