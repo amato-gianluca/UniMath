@@ -8,11 +8,12 @@
  3. Preservation of pullbacks
  4. Preservation of initial objects
  5. Preservation of binary coproducts
- 6. Preservation of coequalizers
+ 6. Preservation of (reflexive) coequalizers
  7. Preservation of coproducts
- 8. Adjunctions and preservation
- 8.1 Right adjoints preserve limits
- 8.2 Left adjoints preserve colimits
+ 8. Preservation of pushouts
+ 9. Adjunctions and preservation
+ 9.1 Right adjoints preserve limits
+ 9.2 Left adjoints preserve colimits
 
  *********************************************************)
 Require Import UniMath.Foundations.All.
@@ -28,6 +29,7 @@ Require Import UniMath.CategoryTheory.limits.initial.
 Require Import UniMath.CategoryTheory.limits.bincoproducts.
 Require Import UniMath.CategoryTheory.limits.coequalizers.
 Require Import UniMath.CategoryTheory.limits.coproducts.
+Require Import UniMath.CategoryTheory.limits.pushouts.
 Require Import UniMath.CategoryTheory.Adjunctions.Core.
 
 Local Open Scope cat.
@@ -86,6 +88,52 @@ Proof.
               F
               (z_iso_Terminals HC₁ (make_Terminal _ Hx)))).
 Defined.
+
+Definition preserves_chosen_terminal_eq
+           {C₁ C₂ : category}
+           (F : C₁ ⟶ C₂)
+           (T₁ : Terminal C₁)
+           (T₂ : Terminal C₂)
+  : UU
+  := ∥ F T₁ = T₂ ∥.
+
+Proposition identity_preserves_chosen_terminal_eq
+            {C : category}
+            (T : Terminal C)
+  : preserves_chosen_terminal_eq (functor_identity C) T T.
+Proof.
+  apply hinhpr.
+  apply idpath.
+Qed.
+
+Proposition composition_preserves_chosen_terminal_eq
+            {C₁ C₂ C₃ : category}
+            {F : C₁ ⟶ C₂}
+            {G : C₂ ⟶ C₃}
+            {T₁ : Terminal C₁}
+            {T₂ : Terminal C₂}
+            {T₃ : Terminal C₃}
+            (HF : preserves_chosen_terminal_eq F T₁ T₂)
+            (HG : preserves_chosen_terminal_eq G T₂ T₃)
+  : preserves_chosen_terminal_eq (F ∙ G) T₁ T₃.
+Proof.
+  revert HF.
+  use factor_through_squash.
+  {
+    apply propproperty.
+  }
+  intro p.
+  revert HG.
+  use factor_through_squash.
+  {
+    apply propproperty.
+  }
+  intro q.
+  cbn.
+  apply hinhpr.
+  rewrite p, q.
+  apply idpath.
+Qed.
 
 (**
  2. Preservation of binary products
@@ -418,7 +466,7 @@ Proof.
 Defined.
 
 (**
- 6. Preservation of coequalizers
+ 6. Preservation of (reflexive) coequalizers
  *)
 Definition preserves_coequalizer
            {C₁ C₂ : category}
@@ -482,7 +530,7 @@ Definition preserves_chosen_coequalizer
        (#F (CoequalizerArrow (HC₁ x y f g)))
        p.
 
-Definition preserves_bincoproduct_if_preserves_coequalizers
+Definition preserves_coequalizer_if_preserves_chosen
            {C₁ C₂ : category}
            (HC₁ : Coequalizers C₁)
            (F : C₁ ⟶ C₂)
@@ -502,6 +550,114 @@ Proof.
                            (z_iso_between_Coequalizer
                               (make_Coequalizer _ _ _ _ Hz)
                               (HC₁ x y f g))))))) ; cbn.
+  - abstract
+      (rewrite <- !functor_comp ;
+       rewrite CoequalizerCommutes ;
+       apply idpath).
+  - abstract
+      (rewrite <- !functor_comp ;
+       rewrite CoequalizerEqAr ;
+       apply idpath).
+Defined.
+
+Definition preserves_reflexive_coequalizer
+           {C₁ C₂ : category}
+           (F : C₁ ⟶ C₂)
+  : UU
+  := ∏ (x y c : C₁)
+       (f g : x --> y)
+       (s : y --> x)
+       (pf : s · f = identity _)
+       (pg : s · g = identity _)
+       (h : y --> c)
+       (p : f · h = g · h)
+       (Fp : #F f · #F h = #F g · #F h),
+     isCoequalizer f g h p
+     →
+     isCoequalizer (#F f) (#F g) (#F h) Fp.
+
+Definition identity_preserves_reflexive_coequalizer
+           (C : category)
+  : preserves_coequalizer (functor_identity C)
+  := λ _ _ _ _ _ _ _ _ Hx, Hx.
+
+Definition composition_preserves_reflexive_coequalizer
+           {C₁ C₂ C₃ : category}
+           {F : C₁ ⟶ C₂}
+           {G : C₂ ⟶ C₃}
+           (HF : preserves_reflexive_coequalizer F)
+           (HG : preserves_reflexive_coequalizer G)
+  : preserves_reflexive_coequalizer (F ∙ G).
+Proof.
+  intros x y c f g s pf pg h p Fp Hx.
+  use (HG (F x) (F y) (F c) (#F f) (#F g) (#F s) _ _ (#F h)).
+  - abstract
+      (rewrite <- functor_comp ;
+       rewrite pf ;
+       apply functor_id).
+  - abstract
+      (rewrite <- functor_comp ;
+       rewrite pg ;
+       apply functor_id).
+  - abstract
+      (rewrite <- !functor_comp ;
+       rewrite p ;
+       apply idpath).
+  - use (HF x y c f g s _ _ h).
+    + exact pf.
+    + exact pg.
+    + exact p.
+    + exact Hx.
+Defined.
+
+Definition isaprop_preserves_reflexive_coequalizer
+           {C₁ C₂ : category}
+           (F : C₁ ⟶ C₂)
+  : isaprop (preserves_reflexive_coequalizer F).
+Proof.
+  repeat (use impred ; intro).
+  use isapropiscontr.
+Qed.
+
+Definition preserves_chosen_reflexive_coequalizer
+           {C₁ C₂ : category}
+           (HC₁ : reflexive_coequalizers C₁)
+           (F : C₁ ⟶ C₂)
+  : UU
+  := ∏ (x y : C₁)
+       (f g : x --> y)
+       (s : y --> x)
+       (pf : s · f = identity _)
+       (pg : s · g = identity _)
+       (p : # F f · # F (CoequalizerArrow (HC₁ x y f g s pf pg))
+            =
+            # F g · # F (CoequalizerArrow (HC₁ x y f g s pf pg))),
+     isCoequalizer
+       (#F f)
+       (#F g)
+       (#F (CoequalizerArrow (HC₁ x y f g s pf pg)))
+       p.
+
+Definition preserves_reflexive_coequalizers_if_chosen
+           {C₁ C₂ : category}
+           (HC₁ : reflexive_coequalizers C₁)
+           (F : C₁ ⟶ C₂)
+           (HF : preserves_chosen_reflexive_coequalizer HC₁ F)
+  : preserves_reflexive_coequalizer F.
+Proof.
+  intros x y c f g s pf pg h p Fp Hz.
+  use (Coequalizer_eq_ar
+            _
+            _
+            _
+            (pr22 (z_iso_to_Coequalizer
+                     (make_Coequalizer _ _ _ _ (HF x y f g s pf pg _))
+                     (z_iso_inv
+                        (functor_on_z_iso
+                           F
+                           (z_iso_between_Coequalizer
+                              (make_Coequalizer _ _ _ _ Hz)
+                              (HC₁ x y f g s pf pg))))))) ; cbn.
   - abstract
       (rewrite <- !functor_comp ;
        rewrite CoequalizerCommutes ;
@@ -573,7 +729,61 @@ Definition preserves_chosen_coproduct
        (λ j, #F (CoproductIn _ _ (HC₁ D) j)).
 
 (**
- 8. Adjunctions and preservation
+ 8. Preservation of pushouts
+ *)
+Definition preserves_pushout
+           {C₁ C₂ : category}
+           (F : C₁ ⟶ C₂)
+  : UU
+  := ∏ (x y z po : C₁)
+       (f : x --> y)
+       (g : x --> z)
+       (i₁ : y --> po)
+       (i₂ : z --> po)
+       (q : f · i₁ = g · i₂)
+       (Fq : # F f · #F i₁ = #F g · #F i₂),
+     isPushout f g i₁ i₂ q
+     →
+     isPushout (#F f) (#F g) (#F i₁) (#F i₂) Fq.
+
+Definition identity_preserves_pushout
+           (C : category)
+  : preserves_pushout (functor_identity C).
+Proof.
+  intros ? ? ? ? ? ? ? ? ? ? H.
+  exact H.
+Defined.
+
+Definition composition_preserves_pushout
+           {C₁ C₂ C₃ : category}
+           {F : C₁ ⟶ C₂}
+           {G : C₂ ⟶ C₃}
+           (HF : preserves_pushout F)
+           (HG : preserves_pushout G)
+  : preserves_pushout (F ∙ G).
+Proof.
+  intros ? ? ? ? ? ? ? ? ? ? H.
+  use HG.
+  - abstract
+      (rewrite <- !functor_comp ;
+       apply maponpaths ;
+       exact q).
+  - use HF.
+    + exact q.
+    + exact H.
+Defined.
+
+Definition isaprop_preserves_pushout
+           {C₁ C₂ : category}
+           (F : C₁ ⟶ C₂)
+  : isaprop (preserves_pushout F).
+Proof.
+  repeat (use impred ; intro).
+  use isapropiscontr.
+Qed.
+
+(**
+ 9. Adjunctions and preservation
  *)
 Section AdjunctionPreservation.
   Context {C₁ C₂ : category}
@@ -599,7 +809,7 @@ Section AdjunctionPreservation.
   Qed.
 
   (**
-   8.1 Right adjoints preserve limits
+   9.1 Right adjoints preserve limits
    *)
   Definition right_adjoint_preserves_terminal
     : preserves_terminal R.
@@ -855,7 +1065,7 @@ Section AdjunctionPreservation.
   Qed.
 
   (**
-   8.2 Left adjoints preserve colimits
+   9.2 Left adjoints preserve colimits
    *)
   Definition left_adjoint_preserves_initial
     : preserves_initial L.

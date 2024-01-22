@@ -198,6 +198,35 @@ Definition locally_strict
   : UU
   := ∏ (a b : B), isaset (a --> b).
 
+Definition globally_strict
+           (B : bicat)
+  : UU
+  := isaset B.
+
+(** Set bicategories *)
+Definition bisetcat
+  : UU
+  := ∑ (B : bicat), locally_strict B × globally_strict B.
+
+Coercion bisetcat_to_bicat
+         (B : bisetcat)
+  : bicat
+  := pr1 B.
+
+Proposition locally_strict_bisetcat
+            (B : bisetcat)
+  : locally_strict B.
+Proof.
+  exact (pr12 B).
+Qed.
+
+Proposition globally_strict_bisetcat
+            (B : bisetcat)
+  : globally_strict B.
+Proof.
+  exact (pr22 B).
+Qed.
+
 Definition is_strict_bicat
            (B : bicat)
   : UU

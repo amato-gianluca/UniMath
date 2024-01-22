@@ -10,11 +10,6 @@ CGraph.v
 GraphPaths.v
 Equivalence_Relations.v
 OrderedSets.v
-Posets/Basics.v
-Posets/MonotoneFunctions.v
-Posets/PointedPosets.v
-Posets/QuotientPoset.v
-Posets.v
 WellFoundedRelations.v
 WellOrderedSets.v
 ZFstructures.v
@@ -25,3 +20,4 @@ Tests.v
 DecSet.v
 Maybe.v
 MoreLists.v
+Tuples.v

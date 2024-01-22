@@ -36,23 +36,6 @@ Require Import UniMath.Bicategories.Limits.Examples.BicatOfUnivCatsLimits.
 
 Local Open Scope cat.
 
-Definition transportf_z_iso_functors
-           {C₁ C₂ : category}
-           (F : C₁ ⟶ C₂)
-           {x₁ x₂ : C₁}
-           (y : C₂)
-           (p : x₁ = x₂)
-           (i : z_iso (F x₁) y)
-  : pr1 (transportf (λ (x : C₁), z_iso (F x) y) p i)
-    =
-    #F (inv_from_z_iso (idtoiso p)) · i.
-Proof.
-  induction p ; cbn.
-  rewrite functor_id.
-  rewrite id_left.
-  apply idpath.
-Qed.
-
 (**
  1. Esos
  *)
@@ -651,12 +634,12 @@ Definition eso_ff_factorization_bicat_of_univ_cats
   : eso_ff_factorization bicat_of_univ_cats.
 Proof.
   intros C₁ C₂ F.
-  refine (univalent_image F ,, sub_precategory_inclusion _ _ ,, functor_full_img _ ,, _).
+  refine (univalent_image F ,, functor_full_img _ ,, sub_precategory_inclusion _ _ ,, _).
   simple refine (_ ,, _ ,, _).
-  - use cat_fully_faithful_is_fully_faithful_1cell.
-    apply fully_faithful_sub_precategory_inclusion.
   - use essentially_surjective_is_eso.
     apply functor_full_img_essentially_surjective.
+  - use cat_fully_faithful_is_fully_faithful_1cell.
+    apply fully_faithful_sub_precategory_inclusion.
   - use nat_z_iso_to_invertible_2cell.
     exact (full_image_inclusion_commute_nat_iso F).
 Defined.

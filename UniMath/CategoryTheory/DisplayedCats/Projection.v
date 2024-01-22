@@ -55,27 +55,8 @@ Definition pseudomonic_pr1_category
 
 (**
 Now we give some conditions to check whether structure or properties are being added via the hlevel of the displayed morphisms.
-We start with local propositionality.
- *)
-Definition locally_propositional
-           {C : category}
-           (D : disp_cat C)
-  : UU
-  := ∏ (x y : C)
-       (f : x --> y)
-       (xx : D x) (yy : D y),
-     isaprop (xx -->[ f ] yy).
+Local propositionality is now found in [Core.v]
 
-Definition isaprop_locally_propositional
-           {C : category}
-           (D : disp_cat C)
-  : isaprop (locally_propositional D).
-Proof.
-  do 5 (use impred ; intro).
-  apply isapropisaprop.
-Defined.
-
-(**
 A displayed category is locally inhabited if there is a displayed morphism above each morphism in the base.
  *)
 Definition locally_inhabited
@@ -141,7 +122,7 @@ Defined.
  *)
 Definition groupoidal_disp_cat
            {C : category}
-           (D : disp_cat C)
+           (D : disp_cat_data C)
   : UU
   := ∏ (x y : C)
        (f : x --> y)
