@@ -156,13 +156,12 @@ Definition unittrivialrel_setquot := totalsubtype unit ,, unittrivialrel_iseqcla
 
 Lemma unittrivialrel_setquot_eq (c : setquot uniteqrel) : totalsubtype unit = c.
 Proof.
-  use (invmap (hsubtype_univalence _ _)).
-  use (pr1 (subtype_equal_cond (totalsubtype unit) c)).
-  use tpair.
-  - intro t.
-    induction t.
-    cbn.
-    intro.
+  use funextsec.
+  intro t.
+  induction t.
+  cbn.
+  use hPropUnivalence.
+  - intros _ .
     induction c as [c iseqclass].
     induction iseqclass as [ishinh is].
     use (squash_to_hProp ishinh).
@@ -170,8 +169,7 @@ Proof.
     induction t as [t tinc].
     induction t.
     exact tinc.
-  - cbn.
-    intros _ _.
+  - intros _.
     exact tt.
 Qed.
 
