@@ -33,3 +33,47 @@ Definition issubuniverse {σ : signature} (A : algebra σ) (B : shsubtype A): UU
 (*TODO: proof it is a prop*)
 
 End SubUniverse.
+
+
+Section HomAndSubUniverse.
+
+  Context {σ : signature} (A B: algebra σ) (f : B s→ A).
+
+  Theorem issubuniverse_image : issubuniverse A (simage_shsubtype f).
+  Proof.
+    intros nm xs.
+    cbn in xs.
+    cbn.
+
+
+    (*IDEA: "bring out" ishinh in h12map (λ s, pr2) xs*)
+
+    Print simage_shsubtype.
+
+    Check h1map (λ s, pr1) xs.
+    Check h12map (λ s, pr2) xs.
+    Check h12map (λ s, pr2) xs
+      : hvec (h1map_vec
+          (λ (s:sorts σ) (t : ∑ x : A s, ishinh_UU (∑ y : B s, f s y = x)), 
+              ishinh_UU (∑ y' : B s, f s y' = (pr1 t)))
+          xs).
+    Check h12map (λ s, pr2) xs
+      : hvec (h1map_vec
+          ( ishinh_UU ∘
+            λ (s:sorts σ) (t : ∑ x : A s, ishinh_UU (∑ y : B s, f s y = x)), 
+              ishinh_UU (∑ y' : B s, f s y' = (pr1 t)))
+          xs).
+
+    
+
+    assert (B⋆ (arity nm)).
+    {
+
+    }
+
+  Qed.
+
+
+
+
+End HomAndSubUniverse.

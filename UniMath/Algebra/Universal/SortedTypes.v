@@ -113,3 +113,31 @@ Proof.
   apply pathsinv0.
   apply h1map_compose.
 Defined.
+
+(*indexed hsubtypes*)
+
+Definition shsubtype {S:UU} (X : sUU S) : UU := ∏ s: S, hsubtype (X s).
+
+(*indexed image*)
+
+Definition simage {S:UU} {X Y: sUU S} (f:X s→ Y) : sUU S
+  := λ s, image (f s).
+
+Definition shfiber {S:UU} {X Y: sUU S} (f:X s→ Y) : ∏ s, Y s → UU
+  := λ (s:S) (y : Y s), (∑ (x : X s), f s x = y). 
+
+Definition simage_shsubtype {S:UU} {X Y : sUU S} (f : X s→ Y)
+  : shsubtype Y := λ (s:S) (y : Y s), (∃ (x : X s), f s x = y).
+
+Context {S:UU} {X Y : sUU S} (f : X s→ Y).
+Context (ss : list S). (*sorts*)
+Context (ys : Y⋆ ss).
+Check (simage_shsubtype f)⋆ ss.
+Check (shfiber f)⋆ ss.
+Check hvec (h1lower ((shfiber f)⋆⋆ ss ys)).
+Check (shfiber f)⋆⋆ ss ys.
+
+
+
+Print starfun.
+Print hsubtype.
