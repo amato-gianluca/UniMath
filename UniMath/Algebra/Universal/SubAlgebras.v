@@ -114,6 +114,8 @@ Proof.
     use pr2.
 Qed.
 
+Section embedding_subuniverse_weq.
+
 Context {σ : signature} (A : algebra σ).
 
 Local Theorem algebraofsubuniverse_image
