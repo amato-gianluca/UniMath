@@ -803,14 +803,14 @@ Proof.
 Defined.
 
 Lemma transportb_h1map_compose_beta {S : UU} {n: nat} {v: vec S n}
-  (B : S → UU) (*B*)
-  (C : S → UU) (*Sig*)
-  (D : ∏ (s: S), (B s) → UU) (*shfiber*)
-  (E : ∏ (s: S), UU) (*A*)
+  (B : S → UU)
+  (C : S → UU)
+  (D : ∏ (s: S), (B s) → UU)
+  (E : ∏ (s: S), UU)
 
-  (p : ∏ (s: S), C s → B s) (*pr1 di sig*)
-  (f : ∏ (s: S) (c : C s), D s (p s c)) (*pr2* di sig*)
-  (g : ∏ (s: S) (b : B s), D s b → E s) (*pr1 di fib*)
+  (p : ∏ (s: S), C s → B s)
+  (f : ∏ (s: S) (c : C s), D s (p s c))
+  (g : ∏ (s: S) (b : B s), D s b → E s)
   (cs : hvec (vec_map (λ s : S, C s) v))
   
   (vhd : S)
@@ -851,14 +851,14 @@ Lemma transportb_h1map_compose_beta {S : UU} {n: nat} {v: vec S n}
 (*TODO: is it possible to somehow factorize this proof?*)
 Lemma h2map_transport_h1mapcompose
   {S : UU} {n: nat} {v: vec S n}
-  (B : S → UU) (*B*)
-  (C : S → UU) (*Sig*)
-  (D : ∏ (s: S), (B s) → UU) (*shfiber*)
-  (E : ∏ (s: S), UU) (*A*)
+  (B : S → UU)
+  (C : S → UU)
+  (D : ∏ (s: S), (B s) → UU)
+  (E : ∏ (s: S), UU)
 
-  (p : ∏ (s: S), C s → B s) (*pr1 di sig*)
-  (f : ∏ (s: S) (c : C s), D s (p s c)) (*pr2* di sig*)
-  (g : ∏ (s: S) (b : B s), D s b → E s) (*pr1 di fib*)
+  (p : ∏ (s: S), C s → B s)
+  (f : ∏ (s: S) (c : C s), D s (p s c))
+  (g : ∏ (s: S) (b : B s), D s b → E s)
   (cs : hvec (vec_map (λ s : S, C s) v))
 
   : h2lower (h2map (λ (s:S) (b:B s), g s b)
